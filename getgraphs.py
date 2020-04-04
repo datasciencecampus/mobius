@@ -92,9 +92,6 @@ def process(input_file, output_folder, overwrite_name=None):
 
     for k, v in enumerate(attributes_new):
 
-        if count == 5:
-            count
-
         # TODO This adds a horizontal line from the next graph, should be a better way
         if (
             (count + 1) % 6 == 0
@@ -110,7 +107,6 @@ def process(input_file, output_folder, overwrite_name=None):
 
     num = 1
     count = 0
-    graph_num = 0
 
     for k, v in enumerate(attributes_new):
 
@@ -118,10 +114,6 @@ def process(input_file, output_folder, overwrite_name=None):
         attributes_save.append(attributes_new[k])
 
         count = count + 1
-        graph_num = graph_num + 1
-
-        if graph_num == 180:
-            graph_num
 
         if count % 6 == 0:
 
