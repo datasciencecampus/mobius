@@ -91,25 +91,37 @@ def process(input_file, output_folder, overwrite_name=None):
     count = 0
 
     for k, v in enumerate(attributes_new):
-        count = count + 1
+
+        if count == 5:
+            count
+
+        # TODO This adds a horizontal line from the next graph, should be a better way
         if (
-            count % 6 == 0
+            (count + 1) % 6 == 0
             and count != 0
-            and "stroke-width:0.5" in attributes_new[k].get("style")
+            and "stroke-width:1.19px" in attributes_new[count].get("style")
         ):
             attributes_new.append(attributes_new[len(attributes_new) - 1])
             attributes_new[k + 1 :] = attributes_new[k:-1]
             paths_new.append(paths_new[len(paths_new) - 1])
             paths_new[k + 1 :] = paths_new[k:-1]
 
+        count = count + 1
+
     num = 1
     count = 0
+    graph_num = 0
+
     for k, v in enumerate(attributes_new):
 
         paths_save.append(paths_new[k])
         attributes_save.append(attributes_new[k])
 
         count = count + 1
+        graph_num = graph_num + 1
+
+        if graph_num == 180:
+            graph_num
 
         if count % 6 == 0:
 
