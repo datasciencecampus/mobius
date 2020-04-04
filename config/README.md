@@ -1,0 +1,1 @@
+This file changes the raw vertices (0-43) to real dates. These are related to the COVID-19 Community Mobility Reports released on Friday 3rd April 2020 and should be updated for future releases.
