@@ -45,7 +45,7 @@ def main(input_folder, output_folder, dates_file, plots):
     except FileExistsError:
         print(f"Output Folder: {output_folder} exists, skipping creation")
 
-    for file in os.listdir(input_folder):
+    for file in sorted(os.listdir(input_folder)):
 
         try:
 
