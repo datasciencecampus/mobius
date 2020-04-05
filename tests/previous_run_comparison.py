@@ -51,7 +51,9 @@ def main(previous_dir, current_dir):
                 current_df = pd.read_csv(os.path.join(current_dir, current_filename))
 
                 try:
-                    pd.testing.assert_series_equal(previous_df["value"], current_df["value"])
+                    pd.testing.assert_series_equal(
+                        previous_df["value"], current_df["value"]
+                    )
                     value_identical += 1
                 except AssertionError:
                     differing.append((current_filename, previous_df, current_df))
@@ -71,15 +73,22 @@ def main(previous_dir, current_dir):
         remove_single_df = current_df.copy()
         remove_single_df["value_before"] = current_df["value"].shift(1)
         remove_single_df["value_after"] = current_df["value"].shift(-1)
-        remove_single_df.loc[remove_single_df.value_before.isna() & remove_single_df.value_after.isna(), "value"] = np.nan
+        remove_single_df.loc[
+            remove_single_df.value_before.isna() & remove_single_df.value_after.isna(),
+            "value",
+        ] = np.nan
 
         try:
-            pd.testing.assert_series_equal(previous_df["value"], remove_single_df["value"])
+            pd.testing.assert_series_equal(
+                previous_df["value"], remove_single_df["value"]
+            )
             removed_single_identical += 1
         except AssertionError:
             still_differing.append((fname, previous_df, current_df))
 
-    print(f"{removed_single_identical} identical after removing single point data from current frame")
+    print(
+        f"{removed_single_identical} identical after removing single point data from current frame"
+    )
 
     print(f"{len(still_differing)} still differing: {still_differing}")
 

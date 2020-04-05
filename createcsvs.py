@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
+"""Take SVG files of individual plots and convert them to CSV."""
 import os
 
 import click
-import numpy as np
 import pandas as pd
-from matplotlib import pyplot as plt
 import svgpathtools
+from matplotlib import pyplot as plt
+
+Y_AXIS_SPAN = 80  # Distance in percentage points from baseline to upper and lower lines
+X_AXIS_SPAN = 42  # Distance covered by x-axis in days
 
 
 @click.command()
@@ -32,18 +35,12 @@ def main(input_folder, output_folder, dates_file, plots):
             Set to true to create png plots from the extracted data
             (used for manual inspection checks against source plots)
     """
-    # Get date lookup file
-    date_df = pd.read_csv(dates_file)
+    date_lookup_df = pd.read_csv(dates_file)
 
-    # Set location
     location = input_folder.split("/")[-1]
-
     print(f"Loading data from location: {location}")
 
-    try:
-        os.mkdir(output_folder)
-    except FileExistsError:
-        print(f"Output Folder: {output_folder} exists, skipping creation")
+    os.makedirs(output_folder, exist_ok=True)
 
     for filename in os.listdir(input_folder):
 
@@ -51,28 +48,23 @@ def main(input_folder, output_folder, dates_file, plots):
             continue
 
         try:
-
             print(f"Getting paths from: {filename}")
-
             paths, _ = svgpathtools.svg2paths(os.path.join(input_folder, filename))
 
             # Gets paths from file
             xlim, y_lines, trend = categorise_paths(paths)
 
-            # Sort largest to smallest. Top line with be 0, baseline 1, bottom line 2
-            y_lines.sort(reverse=True)
-
-            trend_converted = convert_units(trend, y_lines, xlim, yspan=80, xspan=42)
-
-            filename = (
-                f"{output_folder}/{input_folder.split('/')[-1]}-{filename.split('.')[0]}"
+            trend_converted = convert_units(
+                trend, y_lines, xlim, yspan=Y_AXIS_SPAN, xspan=X_AXIS_SPAN
             )
+
+            filename = f"{output_folder}/{input_folder.split('/')[-1]}-{filename.split('.')[0]}"
 
             xs, ys = tuple(zip(*trend_converted))
             df = pd.DataFrame(data={"value": ys, "rel_day": xs})
 
             result_df = pd.merge(
-                date_df, df, left_on="index", right_on="rel_day", how="left"
+                date_lookup_df, df, left_on="index", right_on="rel_day", how="left"
             )
 
             result_df = result_df[["value", "date"]]
@@ -122,7 +114,7 @@ def categorise_paths(paths):
     points = []
 
     if len(y_lines) == 3:
-        # Normal case
+
         xlim = [(path.start.real, path.end.real) for path in paths if len(path) == 1][1]
 
         trends = [path for path in paths if len(path) > 1]
