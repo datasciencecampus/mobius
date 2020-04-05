@@ -77,7 +77,10 @@ def main(input_folder, output_folder, dates_file, plots):
 
             result_df = result_df[["value", "date"]]
             result_df["origin"] = location
-            result_df["graph_num"] = filename.split(".")[0]
+            try:
+                result_df["graph_num"] = filename.split(".")[0].split("-")[1]
+            except IndexError:
+                result_df["graph_num"] = filename.split(".")[0]
 
             result_df.to_csv(
                 f"{filename}.csv", sep=",", index=False, float_format="%.3f"
