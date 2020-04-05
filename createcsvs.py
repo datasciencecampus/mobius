@@ -5,7 +5,7 @@ import click
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
-from svgpathtools import svg2paths
+import svgpathtools
 
 
 @click.command()
@@ -45,13 +45,16 @@ def main(input_folder, output_folder, dates_file, plots):
     except FileExistsError:
         print(f"Output Folder: {output_folder} exists, skipping creation")
 
-    for file in os.listdir(input_folder):
+    for filename in os.listdir(input_folder):
+
+        if filename.startswith("."):
+            continue
 
         try:
 
-            print(f"Getting paths from: {file}")
+            print(f"Getting paths from: {filename}")
 
-            paths, _ = svg2paths(os.path.join(input_folder, file))
+            paths, _ = svgpathtools.svg2paths(os.path.join(input_folder, filename))
 
             # Gets paths from file
             xlim, y_lines, trend = categorise_paths(paths)
@@ -62,7 +65,7 @@ def main(input_folder, output_folder, dates_file, plots):
             trend_converted = convert_units(trend, y_lines, xlim, yspan=80, xspan=42)
 
             filename = (
-                f"{output_folder}/{input_folder.split('/')[-1]}-{file.split('.')[0]}"
+                f"{output_folder}/{input_folder.split('/')[-1]}-{filename.split('.')[0]}"
             )
 
             xs, ys = tuple(zip(*trend_converted))
@@ -74,7 +77,7 @@ def main(input_folder, output_folder, dates_file, plots):
 
             result_df = result_df[["value", "date"]]
             result_df["origin"] = location
-            result_df["graph_num"] = file.split(".")[0]
+            result_df["graph_num"] = filename.split(".")[0]
 
             result_df.to_csv(
                 f"{filename}.csv", sep=",", index=False, float_format="%.3f"
@@ -88,7 +91,7 @@ def main(input_folder, output_folder, dates_file, plots):
                 plt.clf()
 
         except ValueError as err:
-            print(f"ERROR for {file}, skipping")
+            print(f"ERROR for {filename}, skipping")
             print(err)
 
 
@@ -113,27 +116,31 @@ def categorise_paths(paths):
     if len(y_lines) == 5:
         y_lines = [y_lines[0], y_lines[2], y_lines[-1]]
 
+    points = []
+
     if len(y_lines) == 3:
         # Normal case
         xlim = [(path.start.real, path.end.real) for path in paths if len(path) == 1][1]
 
         trends = [path for path in paths if len(path) > 1]
 
-        assert len(y_lines) == 3
-        assert len(trends) == 1
+        for trend in trends:
+            if isinstance(trend[0], svgpathtools.path.CubicBezier):
+                point_xmin, point_xmax, point_ymin, point_ymax = trend.bbox()
+                xmid = (point_xmin + point_xmax) / 2
+                ymid = (point_ymin + point_ymax) / 2
 
-        trend = trends[0]
+                points.append(complex(xmid, ymid))
 
-        mid_points = []
-        for end_seg, next_start_seg in zip(trend[:-1], trend[1:]):
-            if not np.isclose(end_seg.end, next_start_seg.start):
-                mid_points.append(end_seg.end)
+            else:
 
-            mid_points.append(next_start_seg.start)
+                for sub_path in trend.continuous_subpaths():
+                    points += [segment.start for segment in sub_path]
+                    points.append(sub_path.end)
 
-        points = [trend[0].start] + mid_points + [trend[-1].end]
+        y_lines = sorted(y_lines, reverse=True)
 
-        return xlim, sorted(y_lines, reverse=True), points
+        return xlim, y_lines, points
 
     else:
         raise ValueError("Assuming single segment trend line, not yet handled")
