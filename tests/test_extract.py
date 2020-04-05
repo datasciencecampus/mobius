@@ -63,3 +63,27 @@ def test_path_with_points_in_middle():
 
     # Then
     assert len(trend) == 9
+
+
+def test_path_only_individual_points():
+    # Given
+    filepath = "resources/no_segment_trendline.svg"
+
+    # When
+    paths, _ = svg2paths(filepath)
+    xlim, lines, trend = createcsvs.categorise_paths(paths)
+
+    # Then
+    assert len(trend) == 3
+
+
+def test_path_single_line_segment():
+    # Given
+    filepath = "resources/single_segment_trendline.svg"
+
+    # When
+    paths, _ = svg2paths(filepath)
+    xlim, lines, trend = createcsvs.categorise_paths(paths)
+
+    # Then
+    assert len(trend) == 2

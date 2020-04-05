@@ -47,47 +47,46 @@ def main(input_folder, output_folder, dates_file, plots):
         if filename.startswith("."):
             continue
 
-        try:
-            print(f"Getting paths from: {filename}")
-            paths, _ = svgpathtools.svg2paths(os.path.join(input_folder, filename))
+        print(f"Getting paths from: {filename}")
+        paths, _ = svgpathtools.svg2paths(os.path.join(input_folder, filename))
 
-            # Gets paths from file
-            xlim, y_lines, trend = categorise_paths(paths)
+        # Gets paths from file
+        xlim, y_lines, trend = categorise_paths(paths)
 
-            trend_converted = convert_units(
-                trend, y_lines, xlim, yspan=Y_AXIS_SPAN, xspan=X_AXIS_SPAN
-            )
+        trend_converted = convert_units(
+            trend, y_lines, xlim, yspan=Y_AXIS_SPAN, xspan=X_AXIS_SPAN
+        )
 
-            filename = f"{output_folder}/{input_folder.split('/')[-1]}-{filename.split('.')[0]}"
+        filename = (
+            f"{output_folder}/{input_folder.split('/')[-1]}-{filename.split('.')[0]}"
+        )
 
+        if trend_converted:
             xs, ys = tuple(zip(*trend_converted))
-            df = pd.DataFrame(data={"value": ys, "rel_day": xs})
+        else:
+            xs = ys = []
 
-            result_df = pd.merge(
-                date_lookup_df, df, left_on="index", right_on="rel_day", how="left"
-            )
+        df = pd.DataFrame(data={"value": ys, "rel_day": xs})
 
-            result_df = result_df[["value", "date"]]
-            result_df["origin"] = location
-            try:
-                result_df["graph_num"] = filename.split(".")[0].split("-")[1]
-            except IndexError:
-                result_df["graph_num"] = filename.split(".")[0]
+        result_df = pd.merge(
+            date_lookup_df, df, left_on="index", right_on="rel_day", how="left"
+        )
 
-            result_df.to_csv(
-                f"{filename}.csv", sep=",", index=False, float_format="%.3f"
-            )
+        result_df = result_df[["value", "date"]]
+        result_df["origin"] = location
+        try:
+            result_df["graph_num"] = filename.split(".")[0].split("-")[1]
+        except IndexError:
+            result_df["graph_num"] = filename.split(".")[0]
 
-            if plots:
-                plt.plot(result_df.date, result_df.value)
-                plt.ylim(-80, 80)
-                plt.savefig(f"{filename}.png")
+        result_df.to_csv(f"{filename}.csv", sep=",", index=False, float_format="%.3f")
 
-                plt.clf()
+        if plots:
+            plt.plot(result_df.date, result_df.value)
+            plt.ylim(-80, 80)
+            plt.savefig(f"{filename}.png")
 
-        except ValueError as err:
-            print(f"ERROR for {filename}, skipping")
-            print(err)
+            plt.clf()
 
 
 def categorise_paths(paths):
@@ -106,7 +105,17 @@ def categorise_paths(paths):
     Raises:
         ValueError: Assuming single segment trend line, not yet handled
     """
-    y_lines = sorted([path.start.imag for path in paths if len(path) == 1])
+    single_segment_lines = [path for path in paths if len(path) == 1]
+
+    short_trends = []
+    if len(single_segment_lines) > 5:
+
+        single_segment_lines.sort(key=lambda p: p.length())
+
+        short_trends = single_segment_lines[:-5]
+        single_segment_lines = single_segment_lines[:5]
+
+    y_lines = sorted([path.start.imag for path in single_segment_lines])
 
     if len(y_lines) == 5:
         y_lines = [y_lines[0], y_lines[2], y_lines[-1]]
@@ -117,7 +126,7 @@ def categorise_paths(paths):
 
         xlim = [(path.start.real, path.end.real) for path in paths if len(path) == 1][1]
 
-        trends = [path for path in paths if len(path) > 1]
+        trends = [path for path in paths if len(path) > 1] + short_trends
 
         for trend in trends:
             if isinstance(trend[0], svgpathtools.path.CubicBezier):
@@ -138,7 +147,7 @@ def categorise_paths(paths):
         return xlim, y_lines, points
 
     else:
-        raise ValueError("Assuming single segment trend line, not yet handled")
+        raise ValueError(f"Wrong number of y_lines: {len(y_lines)}")
 
 
 def convert_units(trend, line_y, xlim, yspan, xspan):
