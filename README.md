@@ -12,7 +12,7 @@ Scripts `getgraphs.py` and `createcsvs.py` are able to extract all graphs from a
 **Developed and tested with:**
 - MacOS 10.15.4
 - PyCharm Community Edition 2018.3.2
-- Affinity Designer 1.6.5 ([Free 90 day trial link](https://affinity.serif.com/en-gb/90-day-affinity-trial/); [MacOS 1.6.5 Download link](https://d1gl0nrskhax8d.cloudfront.net/macos/designer/1.6.5/affinity-designer-1.6.5.135.dmg?Expires=1586019202&Signature=NV7XtRl5-d0NCYY4P0~VCJDzqrehVqE6T~~rrmEXULvjvkBE6KJc5iQH3ofR6FynCYrUbQFHpJjB1RA1thXqSSdv3NRAO7XFgH6o~B9G0B9U4Q9AcHDYODKaqW7AsK5c~bIu3NdN1Y9DRmm-9ve1fAll7BQ~et2D~KZHeEIz36oy3Qw13srZVFfXQ3g2ekn5Fb8IbH1GDOm3NZRS~tLutRaVnRg7x3d5WTmH5ncJB8i5GkS9b-DKzk961gn5SuqOWtm8WwaE7T~h-kzQJgPU9xqrfdT8QKwJ3wqb8W~DCDAKPSI~wnTXbWJZpE99MaSjZ-vY9jtDZg5SbXLAKfTH6g__&Key-Pair-Id=APKAIMMPYSI7GSVTEAAQ); [Windows 1.6.5 Download link](https://d1gl0nrskhax8d.cloudfront.net/windows/designer/1.6.5/affinity-designer-1.6.5.135.exe?Expires=1586019173&Signature=PAKJ2BnONNmv~oOXfHzAD2D08VTyrw4dFjci7pYjkvh0R2nK9FlfURQX1-VL9l3aYnYBdrkUK9wl-z52ONjrT84v0CODHTsF9mTn0iqaCOVhIVR-IDE4UkI7B3Rcv-vbAdFw8vh1YBdpQBkroxvuCjI8keCRA1htVndQhyBFDLRVDXPmdjDoCewWuESVF60~K35KffgD8kC5fB5BE~LPZOtcIxBPiQSL3nxZC9tARdiKfdEb9FED8zGACIEM9TSbw-KCiNaXrFDjWZi9roi1YkbsT~04Pjkf81pvVfBj2359jKR4TDd8QCmXWjc-6A7XJuhvh-8rwOtY2oUGoJ~RAA__&Key-Pair-Id=APKAIMMPYSI7GSVTEAAQ))
+- Affinity Designer 1.6.5 and 1.8.3 ([Free 90 day trial link](https://affinity.serif.com/en-gb/90-day-affinity-trial/); [MacOS 1.6.5 Download link](https://d1gl0nrskhax8d.cloudfront.net/macos/designer/1.6.5/affinity-designer-1.6.5.135.dmg?Expires=1586019202&Signature=NV7XtRl5-d0NCYY4P0~VCJDzqrehVqE6T~~rrmEXULvjvkBE6KJc5iQH3ofR6FynCYrUbQFHpJjB1RA1thXqSSdv3NRAO7XFgH6o~B9G0B9U4Q9AcHDYODKaqW7AsK5c~bIu3NdN1Y9DRmm-9ve1fAll7BQ~et2D~KZHeEIz36oy3Qw13srZVFfXQ3g2ekn5Fb8IbH1GDOm3NZRS~tLutRaVnRg7x3d5WTmH5ncJB8i5GkS9b-DKzk961gn5SuqOWtm8WwaE7T~h-kzQJgPU9xqrfdT8QKwJ3wqb8W~DCDAKPSI~wnTXbWJZpE99MaSjZ-vY9jtDZg5SbXLAKfTH6g__&Key-Pair-Id=APKAIMMPYSI7GSVTEAAQ); [Windows 1.6.5 Download link](https://d1gl0nrskhax8d.cloudfront.net/windows/designer/1.6.5/affinity-designer-1.6.5.135.exe?Expires=1586019173&Signature=PAKJ2BnONNmv~oOXfHzAD2D08VTyrw4dFjci7pYjkvh0R2nK9FlfURQX1-VL9l3aYnYBdrkUK9wl-z52ONjrT84v0CODHTsF9mTn0iqaCOVhIVR-IDE4UkI7B3Rcv-vbAdFw8vh1YBdpQBkroxvuCjI8keCRA1htVndQhyBFDLRVDXPmdjDoCewWuESVF60~K35KffgD8kC5fB5BE~LPZOtcIxBPiQSL3nxZC9tARdiKfdEb9FED8zGACIEM9TSbw-KCiNaXrFDjWZi9roi1YkbsT~04Pjkf81pvVfBj2359jKR4TDd8QCmXWjc-6A7XJuhvh-8rwOtY2oUGoJ~RAA__&Key-Pair-Id=APKAIMMPYSI7GSVTEAAQ))
 - Python 3
 
 This code is developed at *speed* on the COVID-19 Community Mobility Report PDF documents published on Friday 3rd of April 2020. Changes may be made.
@@ -45,7 +45,7 @@ poetry install
 
    1. Load in PDF document to Affinity Designer.
    1. Click Load all pages.
-   1. `File > Export > SVG (for print)`
+   1. `File > Export > SVG (for print)` if using __version 1.6.3__ or `File > Export > SVG (digital - high quality)` for __version 1.8.3__
    1. Select Area: Whole Document.
    1. Save the SVG file to (`./svgs`).
 
