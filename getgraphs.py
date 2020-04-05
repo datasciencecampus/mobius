@@ -1,10 +1,7 @@
-# stdlib
 import os
-import logging
 
-# third party
 import click
-from svgpathtools import svg2paths2, wsvg
+import svgpathtools
 
 
 @click.command()
@@ -25,7 +22,7 @@ def main(input_location, output_folder, multiple, folder):
     if not multiple:
         process(input_location, output_folder, folder)
     else:
-        files = [f for f in os.listdir(input_location) if f != ".DS_Store"]
+        files = [f for f in os.listdir(input_location) if not f.startswith(".")]
 
         lst = []
         for file in files:
@@ -44,36 +41,34 @@ def main(input_location, output_folder, multiple, folder):
 
 
 def process(input_file, output_folder, overwrite_name=None):
-    hour_lines = []
-    trends = []
-    line_y = []
-    trend_y = []
-    trend_y_end = []
-    paths_new = []
-    attributes_new = []
 
-    paths, attributes, svg_attributes = svg2paths2(input_file)
+    paths, attributes = svgpathtools.svg2paths(input_file)
+
+    relevant_elements = []
 
     # filter only relevant elements of the svg
-    for k, v in enumerate(attributes):
+    for path, attribute in zip(paths, attributes):
 
-        path = paths[k]
         if path._end is None:
             continue
-        if v.get("style") is None:
+
+        style = attribute["style"]
+
+        if style is None:
             continue
 
-        else:
+        if "stroke:#dadce0" in style and "stroke-width:1.19px" in style:
+            relevant_elements.append(("horizontal", path.start, path, attribute))
+            continue
 
-            if "stroke:#dadce0" in v.get("style").split(";"):
-                if "stroke-width:1.19px" in v.get("style").split(";"):
-                    hour_lines.append(k)
-                    paths_new.append(paths[k])
-                    attributes_new.append(attributes[k])
-            if "stroke:#4285f4" in v.get("style").split(";"):
-                trends.append(k)
-                paths_new.append(paths[k])
-                attributes_new.append(attributes[k])
+        # Check for a blue path, or blue filled object
+        if "stroke:#4285f4" in style: # or ("fill:#4285f4" in style and :
+            relevant_elements.append(("trend", path.start, path, attribute))
+            continue
+
+        if "fill:#4285f4" in style and isinstance(path[0], svgpathtools.path.CubicBezier):
+            relevant_elements.append(("trend_point", path.start, path, attribute))
+            continue
 
     # prep output folder
     output_folder = (
@@ -81,47 +76,47 @@ def process(input_file, output_folder, overwrite_name=None):
         if overwrite_name
         else os.path.join(output_folder, input_file.split(".")[0].split("/")[-1])
     )
-    os.mkdir(output_folder)
+    try:
+        os.mkdir(output_folder)
+    except FileExistsError:
+        print("Output folder exists, skip creation")
 
-    # FIX: missing one graph
+    # ordering dependent saving of elements to separate graphs
+    path_buffer = []
 
-    paths_save = []
-    attributes_save = []
-
-    count = 0
-
-    for k, v in enumerate(attributes_new):
-        count = count + 1
-        if (
-            count % 6 == 0
-            and count != 0
-            and "stroke-width:0.5" in attributes_new[k].get("style")
-        ):
-            attributes_new.append(attributes_new[len(attributes_new) - 1])
-            attributes_new[k + 1 :] = attributes_new[k:-1]
-            paths_new.append(paths_new[len(paths_new) - 1])
-            paths_new[k + 1 :] = paths_new[k:-1]
-
+    state = "horizontal"
     num = 1
-    count = 0
-    for k, v in enumerate(attributes_new):
+    for name, _, path, attribute in relevant_elements:
 
-        paths_save.append(paths_new[k])
-        attributes_save.append(attributes_new[k])
+        if name == "horizontal" and len(path_buffer) == 5:
+            paths_to_save, attributes_to_save = tuple(zip(*path_buffer))
+            svgpathtools.wsvg(paths_to_save, attributes=attributes_to_save,
+                              filename=os.path.join(output_folder, f"{num}.svg"))
 
-        count = count + 1
-
-        if count % 6 == 0:
-
-            wsvg(
-                paths_save,
-                filename=os.path.join(output_folder, f"{num}.svg"),
-                attributes=attributes_save,
-            )
-            paths_save = []
-            attributes_save = []
-            count = 0
             num += 1
+            path_buffer = []
+            state = "horizontal"
+
+        if not name.startswith(state):
+
+            if state == "horizontal":
+                state = "trend"
+                assert len(path_buffer) == 5
+
+            else:
+                paths_to_save, attributes_to_save = tuple(zip(*path_buffer))
+                svgpathtools.wsvg(paths_to_save, attributes=attributes_to_save,
+                                  filename=os.path.join(output_folder, f"{num}.svg"))
+
+                num += 1
+                path_buffer = []
+                state = "horizontal"
+
+        path_buffer.append((path, attribute))
+
+    paths_to_save, attributes_to_save = tuple(zip(*path_buffer))
+    svgpathtools.wsvg(paths_to_save, attributes=attributes_to_save,
+                      filename=os.path.join(output_folder, f"{num}.svg"))
 
 
 if __name__ == "__main__":
