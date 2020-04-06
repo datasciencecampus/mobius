@@ -1,10 +1,9 @@
-# stdlib
+# -*- coding: utf-8 -*-
+"""Extract subplots from whole pages/documents in SVG format."""
 import os
-import logging
 
-# third party
 import click
-from svgpathtools import svg2paths2, wsvg
+import svgpathtools
 
 
 @click.command()
@@ -22,10 +21,12 @@ from svgpathtools import svg2paths2, wsvg
     help="If provided will overwrite the output folder name (can not be used with the `--multiple` flag)",
 )
 def main(input_location, output_folder, multiple, folder):
+
     if not multiple:
-        process(input_location, output_folder, folder)
+        output_folder = _prep_output_folder(input_location, output_folder, folder)
+        process(input_location, output_folder)
     else:
-        files = [f for f in os.listdir(input_location) if f != ".DS_Store"]
+        files = [f for f in os.listdir(input_location) if not f.startswith(".")]
 
         lst = []
         for file in files:
@@ -38,94 +39,118 @@ def main(input_location, output_folder, multiple, folder):
         print("Converting:", *["  - " + file for file in files], sep="\n")
         for input_file in [os.path.join(input_location, file) for file in files]:
             try:
+                output_folder = _prep_output_folder(input_location, output_folder, None)
                 process(input_file, output_folder)
             except Exception as e:
                 print("Could not process file ", input_file, f"\nError: {e}", end="\n")
 
 
-def process(input_file, output_folder, overwrite_name=None):
-    hour_lines = []
-    trends = []
-    line_y = []
-    trend_y = []
-    trend_y_end = []
-    paths_new = []
-    attributes_new = []
+def process(input_file, output_folder):
+    """Split out subplots into separate files"""
 
-    paths, attributes, svg_attributes = svg2paths2(input_file)
+    def state_change(path_type_name, state):
+        return not path_type_name.startswith(state)
 
-    # filter only relevant elements of the svg
-    for k, v in enumerate(attributes):
+    def expected_trend_path(name, path_buffer):
+        """Assuming after 5 horizontals we should switch to trend"""
+        return name == "horizontal" and len(path_buffer) == 5
 
-        path = paths[k]
-        if path._end is None:
-            continue
-        if v.get("style") is None:
-            continue
+    def clear_buffer(num, path_buffer, save_subplot):
+        """Clear the current buffer.
 
-        else:
+        Note: Assumes the next path will be a horizontal
+        """
+        save_subplot(path_buffer, num)
+        num += 1
+        path_buffer = []
+        state = "horizontal"
+        return num, path_buffer, state
 
-            if "stroke:#dadce0" in v.get("style").split(";"):
-                if "stroke-width:1.19px" in v.get("style").split(";"):
-                    hour_lines.append(k)
-                    paths_new.append(paths[k])
-                    attributes_new.append(attributes[k])
-            if "stroke:#4285f4" in v.get("style").split(";"):
-                trends.append(k)
-                paths_new.append(paths[k])
-                attributes_new.append(attributes[k])
+    def save_subplot(path_buffer, num):
+        """Take all the paths in the buffer and save them to a new file"""
+        print(f"Saving sublot {num}")
+        paths_to_save, attributes_to_save = tuple(zip(*path_buffer))
+        svgpathtools.wsvg(
+            paths_to_save,
+            attributes=attributes_to_save,
+            filename=os.path.join(output_folder, f"{num}.svg"),
+        )
 
+    print(f"Processing {input_file}")
+
+    paths, attributes = svgpathtools.svg2paths(input_file)
+
+    relevant_elements = _extract_graph_components(attributes, paths)
+
+    # This depends on the paths and attributes being in plot order
+    # Assumes horizontals, followed by trend lines
+    path_buffer = []
+
+    state = "horizontal"
+    num = 1
+    for path_type_name, path, attribute in relevant_elements:
+
+        if expected_trend_path(path_type_name, path_buffer):
+            num, path_buffer, state = clear_buffer(num, path_buffer, save_subplot)
+
+        if state_change(path_type_name, state):
+
+            if state == "horizontal":
+                state = "trend"
+                assert len(path_buffer) == 5
+
+            else:
+                num, path_buffer, state = clear_buffer(num, path_buffer, save_subplot)
+
+        path_buffer.append((path, attribute))
+
+    # Don't forget the last graph in the buffer
+    save_subplot(path_buffer, num)
+
+
+def _prep_output_folder(input_file, output_folder, overwrite_name):
     # prep output folder
     output_folder = (
         os.path.join(output_folder, overwrite_name)
         if overwrite_name
         else os.path.join(output_folder, input_file.split(".")[0].split("/")[-1])
     )
-    os.mkdir(output_folder)
+    try:
+        os.mkdir(output_folder)
+    except FileExistsError:
+        print("Output folder exists, skip creation")
+    return output_folder
 
-    # FIX: missing one graph
 
-    paths_save = []
-    attributes_save = []
+def _extract_graph_components(attributes, paths):
+    """Only keep lines of the svg related to the plots"""
+    relevant_elements = []
+    for path, attribute in zip(paths, attributes):
 
-    count = 0
+        if path._end is None:
+            print("This does happen")
+            continue
 
-    for k, v in enumerate(attributes_new):
+        style = attribute["style"]
 
-        # TODO This adds a horizontal line from the next graph, should be a better way
-        if (
-            (count + 1) % 6 == 0
-            and count != 0
-            and "stroke-width:1.19px" in attributes_new[count].get("style")
+        if style is None:
+            continue
+
+        if "stroke:#dadce0" in style and "stroke-width:1.19px" in style:
+            relevant_elements.append(("horizontal", path, attribute))
+            continue
+
+        # Check for a blue path, or blue filled object
+        if "stroke:#4285f4" in style:  # or ("fill:#4285f4" in style and :
+            relevant_elements.append(("trend", path, attribute))
+            continue
+
+        if "fill:#4285f4" in style and isinstance(
+            path[0], svgpathtools.path.CubicBezier
         ):
-            attributes_new.append(attributes_new[len(attributes_new) - 1])
-            attributes_new[k + 1 :] = attributes_new[k:-1]
-            paths_new.append(paths_new[len(paths_new) - 1])
-            paths_new[k + 1 :] = paths_new[k:-1]
-
-        count = count + 1
-
-    num = 1
-    count = 0
-
-    for k, v in enumerate(attributes_new):
-
-        paths_save.append(paths_new[k])
-        attributes_save.append(attributes_new[k])
-
-        count = count + 1
-
-        if count % 6 == 0:
-
-            wsvg(
-                paths_save,
-                filename=os.path.join(output_folder, f"{num}.svg"),
-                attributes=attributes_save,
-            )
-            paths_save = []
-            attributes_save = []
-            count = 0
-            num += 1
+            relevant_elements.append(("trend_point", path, attribute))
+            continue
+    return relevant_elements
 
 
 if __name__ == "__main__":
