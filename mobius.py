@@ -1,5 +1,7 @@
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
+
 # stdlib
+import re
 import os
 import logging
 
@@ -7,19 +9,99 @@ import logging
 import click
 import pandas as pd
 from tqdm import tqdm
+from google.cloud.storage.client import Client
 
 # project
 from mobius import graph_process, csv_process, prep_output_folder
 
+SVG_BUCKET = "mobility-reports"
 
-@click.command()
+
+def get(filetype="SVG", regex="\d{4}-\d{2}-\d{2}_.+"):
+    client = Client.create_anonymous_client()
+    blobs = filter(
+        lambda b: re.match(f"{filetype}/{regex}", b.name),
+        client.list_blobs(SVG_BUCKET),
+    )
+    return blobs
+
+
+def get_country(blob, svg):
+    name = blob.name.split("/")[-1]
+    if svg:
+        country = name.split("_")[1]
+    else:
+        country = name.replace("Mobility_Report_en.pdf", "")[11:-1]
+    return country
+
+
+def show(filetype, svg=True):
+    MAXLEN = 20
+    blobs = list(get(filetype=filetype))
+    print("Available countries:")
+    for i, blob in enumerate(blobs):
+        country = get_country(blob, svg)
+        country = (
+            country + (" " * (MAXLEN - len(country)))
+            if len(country) < MAXLEN
+            else country[:MAXLEN]
+        )
+        iteration = str(i + 1)
+        iteration = (
+            iteration
+            if (len(iteration) == 3)
+            else (" " * (3 - len(iteration)) + iteration)
+        )
+        print(f" {iteration}. {country} ({blob.name})")
+
+
+@click.group()
+def cli():
+    pass
+
+
+@cli.command(help="List all the SVGs available in the buckets")
+def svg():
+    show("SVG")
+
+
+@cli.command(help="List all the PDFs available in the buckets")
+def pdf():
+    show("PDF", svg=False)
+
+
+@cli.command()
+@click.argument("COUNTRY_CODE")
+@click.option(
+    "-s", "--svg", help="Download SVG of the country code", is_flag=True,
+)
+@click.option(
+    "-p", "--pdf", help="Download PDF of the country code", is_flag=True,
+)
+def download(country_code, svg, pdf):
+    def _download(blobs, svg):
+        client = Client.create_anonymous_client()
+        for blob in blobs:
+            extension = "svg" if svg else "pdf"
+            with open(f"{get_country(blob, svg)}.{extension}", "wb+") as fileobj:
+                client.download_blob_to_file(blob, fileobj)
+
+    if svg:
+        regex = f"\d{{4}}-\d{{2}}-\d{{2}}_{country_code}_.+"
+        blobs = get(filetype="SVG", regex=regex)
+        _download(blobs, True)
+    if pdf:
+        regex = f"\d{{4}}-\d{{2}}-\d{{2}}_{country_code}_.+"
+        blobs = get(filetype="PDF", regex=regex)
+        _download(blobs, False)
+
+
+@cli.command(help="Process a given country SVG")
 @click.argument("INPUT_LOCATION")
 @click.argument("OUTPUT_FOLDER")
 @click.argument("DATES_FILE", default="config/dates_lookup.csv")
 @click.option(
-    "-f",
-    "--folder",
-    help="If provided will overwrite the output folder name (can not be used with the `--multiple` flag)",
+    "-f", "--folder", help="If provided will overwrite the output folder name",
 )
 @click.option(
     "-s", "--svgs", help="Enables saving of svgs that get extracted", is_flag=True,
@@ -33,7 +115,7 @@ from mobius import graph_process, csv_process, prep_output_folder
     is_flag=True,
     help="Enables creation and saving of additional PNG plots",
 )
-def main(input_location, output_folder, folder, dates_file, svgs, csvs, plots):
+def proc(input_location, output_folder, folder, dates_file, svgs, csvs, plots):
 
     date_lookup_df = pd.read_csv(dates_file)
 
@@ -49,4 +131,4 @@ def main(input_location, output_folder, folder, dates_file, svgs, csvs, plots):
 
 
 if __name__ == "__main__":
-    main()
+    cli()
