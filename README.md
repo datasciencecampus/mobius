@@ -4,7 +4,7 @@
     <img src="/meta/logo.png" alt="Logo" height="100px">
 </p>
 
-For extracting **every** graph from **any** COVID-19 Community Mobility Report (182) into
+For extracting **every** graph from **any** [Google's COVID-19 Community Mobility Report](https://www.google.com/covid19/mobility/) (182) into
 comma separated value (CSV) files. This code is developed at _speed_ on the COVID-19 Community Mobility Report PDF documents published on Friday 3rd of April 2020. 
 
 ## Installation
