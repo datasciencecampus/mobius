@@ -49,7 +49,7 @@ poetry install
 ./mobius.py download <COUNTRY_CODE>
 
 # process it
-./mobius.py proc -c <COUNTRY_CODE> <OUTPUT_FOLDER>
+./mobius.py proc <COUNTRY_CODE> <OUTPUT_FOLDER>
 ```
 
 1. Either create, or download a pre-made, SVG document file (this file is the
