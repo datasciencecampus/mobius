@@ -72,6 +72,7 @@ def graph_process(input_file, output_folder, save=True):
         path_buffer.append((path, attribute))
 
     if save:
+        os.mkdir(f"{output_folder}/svg") if not os.path.exists(f"{output_folder}/svg") else False
         # TODO: see if this can be in clear buffer.
         # Don't forget the last graph in the buffer
         save_subplot(path_buffer, output_folder, num)
@@ -86,7 +87,7 @@ def save_subplot(path_buffer, output_folder, num):
     logging.info(f"Saving sublot {num}")
     paths_to_save, attributes_to_save = tuple(zip(*path_buffer))
     svgpathtools.wsvg(
-        paths_to_save, filename=os.path.join(output_folder, f"{num}.svg"),
+        paths_to_save, filename=os.path.join(output_folder, f"svg/{num}.svg"),
     )
 
 

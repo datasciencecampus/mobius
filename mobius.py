@@ -85,12 +85,12 @@ def download(country_code, svg, pdf):
         if len(blobs):
             for blob in blobs:
                 extension = "svg" if svg else "pdf"
-                with open(f"{get_country(blob, svg)}.{extension}", "wb+") as fileobj:
+                with open(f"{extension}s/{get_country(blob, svg)}.{extension}", "wb+") as fileobj:
                     client.download_blob_to_file(blob, fileobj)
 
-            print("Download complete")
+            print(f"Download {country_code} {extension} complete. Saved to /{extension}s")
         else:
-            print("Could not find any files for that code")
+            print(f"Could not find a {extension} file for code {country_code}")
 
     if svg:
         regex = f"\d{{4}}-\d{{2}}-\d{{2}}_{country_code}_.+"

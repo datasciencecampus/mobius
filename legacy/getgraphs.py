@@ -66,10 +66,22 @@ def process(input_file, output_folder):
         state = "horizontal"
         return num, path_buffer, state
 
+    def add_fill(attributes):
+        for attribute in attributes:
+            attribute['stroke-width'] = f"{attribute.get('stroke-width')}px"
+            attribute['style'] = f"{attribute['stroke-width']};{attribute['stroke']}"
+            if attribute['stroke'] == '#4285f4':
+                del attribute['transform']
+                del attribute['stroke-linecap']
+                del attribute['stroke-miterlimit']
+                del attribute['stroke-linejoin']
+        return attributes
+
     def save_subplot(path_buffer, num):
         """Take all the paths in the buffer and save them to a new file"""
         print(f"Saving sublot {num}")
         paths_to_save, attributes_to_save = tuple(zip(*path_buffer))
+        attributes_to_save = add_fill(attributes_to_save)
         svgpathtools.wsvg(
             paths_to_save,
             attributes=attributes_to_save,
@@ -87,8 +99,30 @@ def process(input_file, output_folder):
     path_buffer = []
 
     state = "horizontal"
+
     num = 1
+    order_num = 1
+    count = 0
+    y_place_old = 0
+    y_place_new = 0
+
     for path_type_name, path, attribute in relevant_elements:
+
+
+        # if count % 6 == 0:
+        #     if num == 1:
+        #         order_num = 1
+        #         y_place_old = float(str(path.start).split('(')[-1].split('+')[0])
+        #
+        #
+        #     elif num < 7:
+        #         y_place_new = float(str(path.start).split('(')[-1].split('+')[0])
+        #         if y_place_new > y_place_old:
+        #             order_num = order_num + 1
+        #         y_place_old = y_place_new
+        #
+        #     elif num > 6:
+
 
         if expected_trend_path(path_type_name, path_buffer):
             num, path_buffer, state = clear_buffer(num, path_buffer, save_subplot)
@@ -125,27 +159,33 @@ def _prep_output_folder(input_file, output_folder, overwrite_name):
 def _extract_graph_components(attributes, paths):
     """Only keep lines of the svg related to the plots"""
     relevant_elements = []
+
     for path, attribute in zip(paths, attributes):
 
         if path._end is None:
             print("This does happen")
             continue
 
-        style = attribute["style"]
-
-        if style is None:
+        try:
+            fill = attribute["fill"]
+            stroke = attribute["stroke"]
+            stroke_width = attribute["stroke-width"]
+        except KeyError:
             continue
 
-        if "stroke:#dadce0" in style and "stroke-width:1.19px" in style:
+        if fill is None:
+            continue
+
+        if "#dadce0" in stroke and ".5" in stroke_width:
             relevant_elements.append(("horizontal", path, attribute))
             continue
 
         # Check for a blue path, or blue filled object
-        if "stroke:#4285f4" in style:  # or ("fill:#4285f4" in style and :
+        if "#4285f4" in stroke:  # or ("fill:#4285f4" in style and :
             relevant_elements.append(("trend", path, attribute))
             continue
 
-        if "fill:#4285f4" in style and isinstance(
+        if "#4285f4" in fill and isinstance(
             path[0], svgpathtools.path.CubicBezier
         ):
             relevant_elements.append(("trend_point", path, attribute))
