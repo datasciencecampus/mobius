@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
+"""Take SVG files of individual plots and convert them to CSV."""
 import os
 
 import click
-import numpy as np
 import pandas as pd
+import svgpathtools
 from matplotlib import pyplot as plt
-from svgpathtools import svg2paths
+
+Y_AXIS_SPAN = 80  # Distance in percentage points from baseline to upper and lower lines
+X_AXIS_SPAN = 42  # Distance covered by x-axis in days
 
 
 @click.command()
@@ -32,64 +35,58 @@ def main(input_folder, output_folder, dates_file, plots):
             Set to true to create png plots from the extracted data
             (used for manual inspection checks against source plots)
     """
-    # Get date lookup file
-    date_df = pd.read_csv(dates_file)
+    date_lookup_df = pd.read_csv(dates_file)
 
-    # Set location
     location = input_folder.split("/")[-1]
-
     print(f"Loading data from location: {location}")
 
-    try:
-        os.mkdir(output_folder)
-    except FileExistsError:
-        print(f"Output Folder: {output_folder} exists, skipping creation")
+    os.makedirs(output_folder, exist_ok=True)
 
-    for file in os.listdir(input_folder):
+    for filename in os.listdir(input_folder):
 
-        try:
+        if filename.startswith("."):
+            continue
 
-            print(f"Getting paths from: {file}")
+        print(f"Getting paths from: {filename}")
+        paths, _ = svgpathtools.svg2paths(os.path.join(input_folder, filename))
 
-            paths, _ = svg2paths(os.path.join(input_folder, file))
+        # Gets paths from file
+        xlim, y_lines, trend = categorise_paths(paths)
 
-            # Gets paths from file
-            xlim, y_lines, trend = categorise_paths(paths)
+        trend_converted = convert_units(
+            trend, y_lines, xlim, yspan=Y_AXIS_SPAN, xspan=X_AXIS_SPAN
+        )
 
-            # Sort largest to smallest. Top line with be 0, baseline 1, bottom line 2
-            y_lines.sort(reverse=True)
+        filename = (
+            f"{output_folder}/{input_folder.split('/')[-1]}-{filename.split('.')[0]}"
+        )
 
-            trend_converted = convert_units(trend, y_lines, xlim, yspan=80, xspan=42)
-
-            filename = (
-                f"{output_folder}/{input_folder.split('/')[-1]}-{file.split('.')[0]}"
-            )
-
+        if trend_converted:
             xs, ys = tuple(zip(*trend_converted))
-            df = pd.DataFrame(data={"value": ys, "rel_day": xs})
+        else:
+            xs = ys = []
 
-            result_df = pd.merge(
-                date_df, df, left_on="index", right_on="rel_day", how="left"
-            )
+        df = pd.DataFrame(data={"value": ys, "rel_day": xs})
 
-            result_df = result_df[["value", "date"]]
-            result_df["origin"] = location
-            result_df["graph_num"] = file.split(".")[0]
+        result_df = pd.merge(
+            date_lookup_df, df, left_on="index", right_on="rel_day", how="left"
+        )
 
-            result_df.to_csv(
-                f"{filename}.csv", sep=",", index=False, float_format="%.3f"
-            )
+        result_df = result_df[["value", "date"]]
+        result_df["origin"] = location
+        try:
+            result_df["graph_num"] = filename.split(".")[0].split("-")[1]
+        except IndexError:
+            result_df["graph_num"] = filename.split(".")[0]
 
-            if plots:
-                plt.plot(result_df.date, result_df.value)
-                plt.ylim(-80, 80)
-                plt.savefig(f"{filename}.png")
+        result_df.to_csv(f"{filename}.csv", sep=",", index=False, float_format="%.3f")
 
-                plt.clf()
+        if plots:
+            plt.plot(result_df.date, result_df.value)
+            plt.ylim(-80, 80)
+            plt.savefig(f"{filename}.png")
 
-        except ValueError as err:
-            print(f"ERROR for {file}, skipping")
-            print(err)
+            plt.clf()
 
 
 def categorise_paths(paths):
@@ -108,35 +105,49 @@ def categorise_paths(paths):
     Raises:
         ValueError: Assuming single segment trend line, not yet handled
     """
-    y_lines = sorted([path.start.imag for path in paths if len(path) == 1])
+    single_segment_lines = [path for path in paths if len(path) == 1]
+
+    short_trends = []
+    if len(single_segment_lines) > 5:
+
+        single_segment_lines.sort(key=lambda p: p.length())
+
+        short_trends = single_segment_lines[:-5]
+        single_segment_lines = single_segment_lines[:5]
+
+    y_lines = sorted([path.start.imag for path in single_segment_lines])
 
     if len(y_lines) == 5:
         y_lines = [y_lines[0], y_lines[2], y_lines[-1]]
 
+    points = []
+
     if len(y_lines) == 3:
-        # Normal case
+
         xlim = [(path.start.real, path.end.real) for path in paths if len(path) == 1][1]
 
-        trends = [path for path in paths if len(path) > 1]
+        trends = [path for path in paths if len(path) > 1] + short_trends
 
-        assert len(y_lines) == 3
-        assert len(trends) == 1
+        for trend in trends:
+            if isinstance(trend[0], svgpathtools.path.CubicBezier):
+                point_xmin, point_xmax, point_ymin, point_ymax = trend.bbox()
+                xmid = (point_xmin + point_xmax) / 2
+                ymid = (point_ymin + point_ymax) / 2
 
-        trend = trends[0]
+                points.append(complex(xmid, ymid))
 
-        mid_points = []
-        for end_seg, next_start_seg in zip(trend[:-1], trend[1:]):
-            if not np.isclose(end_seg.end, next_start_seg.start):
-                mid_points.append(end_seg.end)
+            else:
 
-            mid_points.append(next_start_seg.start)
+                for sub_path in trend.continuous_subpaths():
+                    points += [segment.start for segment in sub_path]
+                    points.append(sub_path.end)
 
-        points = [trend[0].start] + mid_points + [trend[-1].end]
+        y_lines = sorted(y_lines, reverse=True)
 
-        return xlim, sorted(y_lines, reverse=True), points
+        return xlim, y_lines, points
 
     else:
-        raise ValueError("Assuming single segment trend line, not yet handled")
+        raise ValueError(f"Wrong number of y_lines: {len(y_lines)}")
 
 
 def convert_units(trend, line_y, xlim, yspan, xspan):
