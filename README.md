@@ -41,7 +41,7 @@ python ./mobius.py download <COUNTRY_CODE>
 python ./mobius.py proc <COUNTRY_CODE> <OUTPUT_FOLDER>
 ```
 
-1. **Download SVG and PDF files.**:
+1. **Check for, and download, SVG and PDF files using `mobius.py svg` and `mobius.py download` commands**:
 
    Use the `mobius.py` command line tool to list all the available countries
    for SVGs and then download them with the two helpful commands below
