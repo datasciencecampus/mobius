@@ -23,7 +23,7 @@ def get(filetype="SVG", regex="\d{4}-\d{2}-\d{2}_.+"):
         lambda b: re.match(f"{filetype}/{regex}", b.name),
         client.list_blobs(SVG_BUCKET),
     )
-    return blobs
+    return list(blobs)
 
 
 def get_country(blob, svg):
@@ -73,18 +73,24 @@ def pdf():
 @cli.command()
 @click.argument("COUNTRY_CODE")
 @click.option(
-    "-s", "--svg", help="Download SVG of the country code", is_flag=True,
+    "-s", "--svg", help="Download SVG of the country code", is_flag=True, default=True,
 )
 @click.option(
     "-p", "--pdf", help="Download PDF of the country code", is_flag=True,
 )
 def download(country_code, svg, pdf):
+    client = Client.create_anonymous_client()
+
     def _download(blobs, svg):
-        client = Client.create_anonymous_client()
-        for blob in blobs:
-            extension = "svg" if svg else "pdf"
-            with open(f"{get_country(blob, svg)}.{extension}", "wb+") as fileobj:
-                client.download_blob_to_file(blob, fileobj)
+        if len(blobs):
+            for blob in blobs:
+                extension = "svg" if svg else "pdf"
+                with open(f"{get_country(blob, svg)}.{extension}", "wb+") as fileobj:
+                    client.download_blob_to_file(blob, fileobj)
+
+            print("Download complete")
+        else:
+            print("Could not find any files for that code")
 
     if svg:
         regex = f"\d{{4}}-\d{{2}}-\d{{2}}_{country_code}_.+"
@@ -107,15 +113,12 @@ def download(country_code, svg, pdf):
     "-s", "--svgs", help="Enables saving of svgs that get extracted", is_flag=True,
 )
 @click.option(
-    "-c", "--csvs", help="Enables saving of csvs that get extracted", is_flag=True,
-)
-@click.option(
     "-p",
     "--plots",
     is_flag=True,
     help="Enables creation and saving of additional PNG plots",
 )
-def proc(input_location, output_folder, folder, dates_file, svgs, csvs, plots):
+def proc(input_location, output_folder, folder, dates_file, svgs, plots):
 
     date_lookup_df = pd.read_csv(dates_file)
 
@@ -125,7 +128,7 @@ def proc(input_location, output_folder, folder, dates_file, svgs, csvs, plots):
 
     iterable = tqdm(data.items())
     return [
-        csv_process(paths, num, date_lookup_df, output_folder, plots=plots, save=csvs)
+        csv_process(paths, num, date_lookup_df, output_folder, plots=plots, save=True)
         for num, paths in iterable
     ]
 
