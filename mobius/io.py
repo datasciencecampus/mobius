@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+"""Handle input/output for the project"""
 import os
 from contextlib import contextmanager
 
@@ -52,3 +53,17 @@ def open_document(filepath):
     f = open(filepath, "rb")
     yield f
     f.close()
+
+
+def prep_output_folder(input_file, output_folder, overwrite_name):
+    """Prepare the output folder. Creating required folder."""
+    output_folder = (
+        os.path.join(output_folder, overwrite_name)
+        if overwrite_name
+        else os.path.join(output_folder, input_file.split(".")[0].split("/")[-1])
+    )
+    try:
+        os.mkdir(output_folder)
+    except FileExistsError:
+        print("Output folder exists, skip creation")
+    return output_folder

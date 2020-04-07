@@ -25,7 +25,9 @@ from tqdm import tqdm
 
 Anchor = collections.namedtuple("Anchor", ["left", "bottom"])
 
-PlotElements = collections.namedtuple("PlotElements", ["anchor", "plot_name", "headline_figure"])
+PlotElements = collections.namedtuple(
+    "PlotElements", ["anchor", "plot_name", "headline_figure"]
+)
 
 
 class PageData:
@@ -33,7 +35,7 @@ class PageData:
     __HEADING_DATE_STRING = "March 29, 2020"
 
     __COUNTRY_HEADLINE_OFFSETS = (-130, -20, -20, 40)
-    __COUNTRY_PLOT_NAME_OFFSETS = (- 130, 40, -20, 60)
+    __COUNTRY_PLOT_NAME_OFFSETS = (-130, 40, -20, 60)
 
     __HEADLINE_OFFSETS = (-10, 45, 140, 65)
     __PLOT_NAME_OFFSETS = (-5, 70, 100, 90)
@@ -112,7 +114,7 @@ class PageData:
             anchor.left + offset[0],
             anchor.bottom + offset[1],
             anchor.left + offset[2],
-            anchor.bottom + offset[3]
+            anchor.bottom + offset[3],
         )
 
     @staticmethod
@@ -122,7 +124,9 @@ class PageData:
 
         for idx, (bbox, text) in enumerate(text_elements):
             bbox_to_text.add(idx, bbox, text.strip())
-            text_to_corner[text.replace("*", "").strip()].append(Anchor(bbox[0], bbox[1]))
+            text_to_corner[text.replace("*", "").strip()].append(
+                Anchor(bbox[0], bbox[1])
+            )
 
         return bbox_to_text, text_to_corner
 
@@ -199,7 +203,9 @@ def _process_plots(plots, page_data, result):
 def sort_elements(elements):
 
     elements = sorted(elements, key=lambda row: int(round(row.anchor.left, -1)))
-    elements = sorted(elements, key=lambda row: int(round(row.anchor.bottom, -1)), reverse=True)
+    elements = sorted(
+        elements, key=lambda row: int(round(row.anchor.bottom, -1)), reverse=True
+    )
 
     return elements
 
@@ -215,7 +221,9 @@ def page_gen(document):
     device = pdfminer.converter.PDFPageAggregator(rsrcmgr, laparams=laparams)
     interpreter = pdfminer.pdfinterp.PDFPageInterpreter(rsrcmgr, device)
 
-    for page_num, page in enumerate(pdfminer.pdfpage.PDFPage.get_pages(document), start=1):
+    for page_num, page in enumerate(
+        pdfminer.pdfpage.PDFPage.get_pages(document), start=1
+    ):
 
         interpreter.process_page(page)
         layout = device.get_result()
@@ -258,34 +266,48 @@ def _extract(f):
 def validate(df):
     """Validates combined results, prints to stdout"""
     df.headline = df.headline.str.replace("%", "", regex=False)
-    df.loc[df.headline.str.contains("Not enough data", regex=False), "headline"] = np.nan
+    df.loc[
+        df.headline.str.contains("Not enough data", regex=False), "headline"
+    ] = np.nan
     df.headline = df.headline.astype(float)
     last_entries = df.dropna().groupby(by=["region", "plot_name"]).tail(1)
 
     print(f"Plots with data: {len(last_entries)} ")
 
-    invalid_df = last_entries[last_entries.value.round() != last_entries.headline].copy()
+    invalid_df = last_entries[
+        last_entries.value.round() != last_entries.headline
+    ].copy()
     invalid_df.value = invalid_df.value.round(3)
 
     print(f"Plots where last point doesn't match headline: {len(invalid_df)}")
 
-    print(invalid_df[["country", "region", "plot_name", "value", "headline"]]
-    .set_index(["country", "region", "plot_name"]).to_markdown())
+    print(
+        invalid_df[["country", "region", "plot_name", "value", "headline"]]
+        .set_index(["country", "region", "plot_name"])
+        .to_markdown()
+    )
 
     threshold = 5
-    large_diff = last_entries[np.abs(last_entries.value.round() - last_entries.headline) > threshold].copy()
+    large_diff = last_entries[
+        np.abs(last_entries.value.round() - last_entries.headline) > threshold
+    ].copy()
     large_diff.value = large_diff.value.round()
 
     print(f"Plots where last point is more than {threshold} away: {len(large_diff)}")
 
-    print(large_diff[["country", "region", "plot_name", "value", "headline"]]
-          .set_index(["country", "region", "plot_name"]).to_markdown())
+    print(
+        large_diff[["country", "region", "plot_name", "value", "headline"]]
+        .set_index(["country", "region", "plot_name"])
+        .to_markdown()
+    )
 
 
 def summarise(f):
 
     results = []
-    for idx, data in tqdm(enumerate(_extract(f), start=1), desc="Extracting plot summaries"):
+    for idx, data in tqdm(
+        enumerate(_extract(f), start=1), desc="Extracting plot summaries"
+    ):
 
         country, region, page_num, plot_elements = data
 
@@ -295,7 +317,7 @@ def summarise(f):
             "page_num": page_num,
             "plot_num": idx,
             "plot_name": plot_elements.plot_name,
-            "headline": plot_elements.headline_figure
+            "headline": plot_elements.headline_figure,
         }
         results.append(row_dict)
 
@@ -303,4 +325,14 @@ def summarise(f):
     df["asterisk"] = df.plot_name.str.contains("*", regex=False)
     df.plot_name = df.plot_name.str.replace(pat="*", repl="", regex=False)
 
-    return df[["country", "page_num", "plot_num", "region", "plot_name", "asterisk", "headline"]]
+    return df[
+        [
+            "country",
+            "page_num",
+            "plot_num",
+            "region",
+            "plot_name",
+            "asterisk",
+            "headline",
+        ]
+    ]

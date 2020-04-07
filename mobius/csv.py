@@ -5,7 +5,6 @@ import os
 import pandas as pd
 import svgpathtools
 from matplotlib import pyplot as plt
-
 from tqdm import tqdm
 
 Y_AXIS_SPAN = 80  # Distance in percentage points from baseline to upper and lower lines
@@ -47,7 +46,9 @@ def csv_process(paths, name, date_lookup, output_folder=None, plots=True, save=N
     result_df["graph_num"] = name
 
     if save:
-        os.mkdir(f"{output_folder}/csv") if not os.path.exists(f"{output_folder}/csv") else False
+        os.mkdir(f"{output_folder}/csv") if not os.path.exists(
+            f"{output_folder}/csv"
+        ) else False
         result_df.to_csv(
             os.path.join(output_folder, f"csv/{name}.csv"),
             sep=",",
@@ -56,13 +57,15 @@ def csv_process(paths, name, date_lookup, output_folder=None, plots=True, save=N
         )
 
     if plots and output_folder:
-        os.mkdir(f"{output_folder}/plot") if not os.path.exists(f"{output_folder}/plot") else False
+        os.mkdir(f"{output_folder}/plot") if not os.path.exists(
+            f"{output_folder}/plot"
+        ) else False
         plt.plot(result_df.date, result_df.value)
         plt.ylim(-80, 80)
         plt.xticks(rotation=90)
-        plt.xlabel('Date')
-        plt.ylabel('Mobility change %')
-        plt.axhline(y=0.5, color='k', linestyle='--', linewidth=0.5)
+        plt.xlabel("Date")
+        plt.ylabel("Mobility change %")
+        plt.axhline(y=0.5, color="k", linestyle="--", linewidth=0.5)
         plt.tight_layout()
         plt.savefig(os.path.join(output_folder, f"plot/{name}.png"))
 

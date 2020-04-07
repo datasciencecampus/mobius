@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #!/usr/bin/env python3
 import re
 
@@ -5,11 +6,7 @@ import click
 import pandas as pd
 from google.cloud.storage.client import Client
 
-import mobius.io
-import mobius.csv
-import mobius.extraction
-
-from mobius import graph_process, prep_output_folder
+import mobius
 
 SVG_BUCKET = "mobility-reports"
 
@@ -83,10 +80,14 @@ def download(country_code, svg, pdf):
 
         if len(blobs):
             for blob in blobs:
-                with open(f"{extension}s/{get_country(blob, svg)}.{extension}", "wb+") as fileobj:
+                with open(
+                    f"{extension}s/{get_country(blob, svg)}.{extension}", "wb+"
+                ) as fileobj:
                     client.download_blob_to_file(blob, fileobj)
 
-            print(f"Download {country_code} {extension} complete. Saved to /{extension}s")
+            print(
+                f"Download {country_code} {extension} complete. Saved to /{extension}s"
+            )
         else:
             print(f"Could not find a {extension} file for code {country_code}")
 
@@ -121,8 +122,8 @@ def proc(input_location, output_folder, folder, dates_file, svgs, plots):
     date_lookup_df = mobius.io.read_dates_lookup(dates_file)
 
     print(f"Processing {input_location}")
-    output_folder = prep_output_folder(input_location, output_folder, folder)
-    data = graph_process(input_location, output_folder, svgs)
+    output_folder = mobius.io.prep_output_folder(input_location, output_folder, folder)
+    data = mobius.graphs.graph_process(input_location, output_folder, svgs)
 
     mobius.csv.process_all(data, date_lookup_df, output_folder, plots, save=True)
 
@@ -138,13 +139,15 @@ def full(input_pdf, input_svg, output_folder, dates_file=None):
 
     mobius.io.write_summary(summary_df, input_pdf, output_folder)
 
-    data = graph_process(input_svg, None, False)
+    data = mobius.graphs.graph_process(input_svg, None, False)
 
     date_lookup_df = mobius.io.read_dates_lookup(dates_file)
 
     svg_df = mobius.csv.process_all(data, date_lookup_df)
 
-    result_df = pd.merge(summary_df, svg_df, left_on="plot_num", right_on="graph_num", how="outer")
+    result_df = pd.merge(
+        summary_df, svg_df, left_on="plot_num", right_on="graph_num", how="outer"
+    )
 
     mobius.extraction.validate(result_df)
 
