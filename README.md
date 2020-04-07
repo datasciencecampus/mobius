@@ -1,7 +1,7 @@
 # Mobility Report graph extractor (mobius)
 
 <p align="center">
-    <img src="/meta/logo.png" alt="Logo" height="100px">
+    <img src="/meta/logo.png" alt="Logo"  height="200px">
 </p>
 
 For extracting **every** graph from **any** [Google's COVID-19 Community Mobility Report](https://www.google.com/covid19/mobility/) (182) into
