@@ -77,9 +77,14 @@ class PageData:
 
         boxes = self.intersecting_boxes(bbox)
 
-        text = boxes[0].object
+        text = "".join(box.object for box in boxes)
 
-        clean_text = text.replace("*\n", "").replace("compared to baseline", "").strip()
+        clean_text = (
+            text.replace("*\n", "")
+                .replace("*", "")
+                .replace("compared to baseline", "")
+                .strip()
+        )
 
         return clean_text
 
@@ -151,7 +156,7 @@ def _country_level_extractor(page_data: PageData):
 EXTRACTORS = dict.fromkeys([1, 2], _country_level_extractor)
 
 
-def region_level_extractor(page_data: PageData):
+def _region_level_extractor(page_data: PageData):
 
     anchors = page_data["Baseline"]
 
@@ -250,7 +255,7 @@ def _extract(f):
         if page_num == 1:
             country = page_data.country_name()
 
-        extractor = EXTRACTORS.get(page_num, region_level_extractor)
+        extractor = EXTRACTORS.get(page_num, _region_level_extractor)
 
         data = extractor(page_data)
 
