@@ -52,7 +52,7 @@ def show(filetype):
         print(f" {iteration}. {country} ({blob.name})")
 
 
-@click.group()
+@click.group(help="Downloader and processor for Google mobility reports")
 def cli():
     pass
 
@@ -67,7 +67,7 @@ def pdf():
     show("PDF")
 
 
-@cli.command()
+@cli.command(help="Download svg for a given country using the country code")
 @click.argument("COUNTRY_CODE")
 @click.option(
     "-s", "--svg", help="Download SVG of the country code", is_flag=True, default=True,
