@@ -26,6 +26,13 @@ To install with `poetry`
 poetry install
 ```
 
+### External Dependencies
+
+This project uses `Rtree` which in turn depends on `spatialindex`.
+
+On OSX this can require separate installation:
+`brew install spatialindex`
+
 ## Usage
 
 **TLDR:**
@@ -76,6 +83,15 @@ Options:
   -p, --plots        Enables creation and saving of additional PNG plots
   --help             Show this message and exit.
 ```
+Specify the input file for the individual country as the `INPUT_LOCATION` and the
+output folder where you want the CSV and other files to be saved to (e.g.
+`./output`).
+
+Optionally pass in a custom the dates lookup file (e.g.
+`./config/dates_lookup.csv`) - used to convert coordinates to dates.
+
+If you want simple matplotlib PNG plots to save as well as CSV files, use the `-p` flag.
+
 
 3. **(Alternative) Run the `mobius.py full` command**
 ```text
@@ -86,27 +102,33 @@ Usage: mobius.py full [OPTIONS] INPUT_PDF INPUT_SVG OUTPUT_FOLDER
 Options:
   --help  Show this message and exit.
 ```
-Specify the input file for the individual country as the `INPUT_LOCATION` and the
-output folder where you want the CSV and other files to be saved to (e.g.
-`./output`).
+Specify an input PDF for an individual country as `INPUT_PDF` along with a single
+file SVG of that PDF as `INPUT_SVG`.
 
-Optionally pass in a custom the dates lookup file (e.g.
-`./config/dates_lookup.csv`) - used to convert coordinates to dates.
+Command will create two CSVs and save them in `OUTPUT_FOLDER` (names based 
+on `INPUT_PDF` name):
 
-If you want simple matplotlib PNG plots to save as well as CSV files, use the `-p` flag.
+* Summary CSV of just the headline figures for each region/category
+    (`<OUTPUT_FOLDER>/<INPUT_PDF>_summary.csv`)
+* Summary CSV joined to the data extracted from the SVG plots
+    (`<OUTPUT_FOLDER>/<INPUT_PDF>.csv`)
+    
+Result of command is a short summary of any discrepancies between the summary figures
+and the data extracted from svg plots.
+
 
 ## Data format
 
-Each CSV will be saved to (`./output/<COUNTRY_CODE>/csv`), starting at `1.csv`. As of the **COVID-19 Community Mobility Reports** released on Friday 3rd April 2020, CSV files `1.csv` to `6.csv` relate to the country-level graphs in the original PDF (pages one and two). Then each set of 6 CSV files (e.g., `7.csv` to `12.csv`) will relate to a regional area.
+Each CSV from `proc` will be saved to (`./output/<COUNTRY_CODE>/csv`), starting at `1.csv`. As of the **COVID-19 Community Mobility Reports** released on Friday 3rd April 2020, CSV files `1.csv` to `6.csv` relate to the country-level graphs in the original PDF (pages one and two). Then each set of 6 CSV files (e.g., `7.csv` to `12.csv`) will relate to a regional area.
 
 Each set of 6 files follows the order:
-
-1. Retail & recreation
-2. Grocery & pharmacy
-3. Parks
-4. Transit stations
-5. Workplaces
-6. Residential
+    1. Retail & recreation
+    2. Grocery & pharmacy
+    3. Parks
+    4. Transit stations
+    5. Workplaces
+    6. Residential
+    
 
 ## G20 CSV Datasets
 
@@ -128,9 +150,3 @@ Any suggestions or issues, please use the Issues template. We welcome
 collaborators. To help us with this work, fork the repository and issue a Pull
 Request when you have added a feature, or fixed a bug. Thanks!
 
-## External Dependencies
-
-This project depends on `spatialindex`, required for the `Rtree` library.
-
-On OSX this requires installation:
-`brew install spatialindex`
