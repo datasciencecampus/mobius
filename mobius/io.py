@@ -22,7 +22,7 @@ def write_summary(df, input_pdf, output_folder):
     out_filename = input_no_ext + "_summary.csv"
 
     outpath = os.path.join(output_folder, out_filename)
-    df.to_csv(outpath, index=False)
+    df.to_csv(outpath, index=False, float_format="%.3f",)
 
 
 def write_full_results(df, input_pdf, output_folder):
@@ -44,7 +44,7 @@ def write_full_results(df, input_pdf, output_folder):
         "headline",
     ]
 
-    df[relevant_columns].to_csv(outpath, index=False)
+    df[relevant_columns].to_csv(outpath, index=False, float_format="%.3f")
 
 
 @contextmanager
