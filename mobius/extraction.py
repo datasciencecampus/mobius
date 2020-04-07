@@ -281,11 +281,12 @@ def validate(df):
 
     print(f"Plots where last point doesn't match headline: {len(invalid_df)}")
 
-    print(
-        invalid_df[["country", "region", "plot_name", "value", "headline"]]
-        .set_index(["country", "region", "plot_name"])
-        .to_markdown()
-    )
+    if len(invalid_df) > 0:
+        print(
+            invalid_df[["country", "region", "plot_name", "value", "headline"]]
+            .set_index(["country", "region", "plot_name"])
+            .to_markdown()
+        )
 
     threshold = 5
     large_diff = last_entries[
@@ -295,11 +296,12 @@ def validate(df):
 
     print(f"Plots where last point is more than {threshold} away: {len(large_diff)}")
 
-    print(
-        large_diff[["country", "region", "plot_name", "value", "headline"]]
-        .set_index(["country", "region", "plot_name"])
-        .to_markdown()
-    )
+    if len(large_diff) > 0:
+        print(
+            large_diff[["country", "region", "plot_name", "value", "headline"]]
+            .set_index(["country", "region", "plot_name"])
+            .to_markdown()
+        )
 
 
 def summarise(f):
