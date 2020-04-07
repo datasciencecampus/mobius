@@ -265,6 +265,7 @@ def _extract(f):
 
 def validate(df):
     """Validates combined results, prints to stdout"""
+    df = df.copy()
     df.headline = df.headline.str.replace("%", "", regex=False)
     df.loc[
         df.headline.str.contains("Not enough data", regex=False), "headline"
