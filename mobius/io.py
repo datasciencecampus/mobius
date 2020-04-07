@@ -34,10 +34,10 @@ def write_full_results(df, input_pdf, output_folder):
 
     relevant_columns = [
         "country",
-        "plot_name",
         "page_num",
-        "region",
         "plot_num",
+        "region",
+        "plot_name",
         "asterisk",
         "date",
         "value",
