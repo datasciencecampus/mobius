@@ -1,7 +1,5 @@
-# stdlib
 import os
 
-# project
 from .graphs import graph_process
 from .csv import csv_process
 

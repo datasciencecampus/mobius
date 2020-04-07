@@ -18,8 +18,10 @@ Usage:
 """
 import collections
 
+import numpy as np
 import pandas as pd
 import rtree
+from tqdm import tqdm
 
 Anchor = collections.namedtuple("Anchor", ["left", "bottom"])
 
@@ -73,7 +75,11 @@ class PageData:
 
         boxes = self.intersecting_boxes(bbox)
 
-        return boxes[0].object.replace("*\n", "").replace("compared to baseline", "").strip()
+        text = boxes[0].object
+
+        clean_text = text.replace("*\n", "").replace("compared to baseline", "").strip()
+
+        return clean_text
 
     def plot_name(self, anchor):
 
@@ -198,13 +204,12 @@ def sort_elements(elements):
     return elements
 
 
-def page_gen(filepath):
+def page_gen(document):
     import pdfminer.converter
     import pdfminer.layout
     import pdfminer.pdfinterp
     import pdfminer.pdfpage
 
-    document = open(filepath, 'rb')
     rsrcmgr = pdfminer.pdfinterp.PDFResourceManager()
     laparams = pdfminer.layout.LAParams(all_texts=True)
     device = pdfminer.converter.PDFPageAggregator(rsrcmgr, laparams=laparams)
@@ -226,11 +231,11 @@ def text_gen(layout):
             yield element.bbox, element.get_text()
 
 
-def _extract(filepath):
+def _extract(f):
 
     country = None
 
-    for page_num, text_elements in enumerate(page_gen(filepath), start=1):
+    for page_num, text_elements in enumerate(page_gen(f), start=1):
 
         page_data = PageData(page_num, text_elements)
 
@@ -250,14 +255,37 @@ def _extract(filepath):
                 yield country, region, page_num, plot
 
 
-def summarise(filepath):
-    print(f"Creating summary data for {filepath}")
+def validate(df):
+    """Validates combined results, prints to stdout"""
+    df.headline = df.headline.str.replace("%", "", regex=False)
+    df.loc[df.headline.str.contains("Not enough data", regex=False), "headline"] = np.nan
+    df.headline = df.headline.astype(float)
+    last_entries = df.dropna().groupby(by=["region", "plot_name"]).tail(1)
+
+    print(f"Plots with data: {len(last_entries)} ")
+
+    invalid_df = last_entries[last_entries.value.round() != last_entries.headline].copy()
+    invalid_df.value = invalid_df.value.round(3)
+
+    print(f"Plots where last point doesn't match headline: {len(invalid_df)}")
+
+    print(invalid_df[["country", "region", "plot_name", "value", "headline"]]
+    .set_index(["country", "region", "plot_name"]).to_markdown())
+
+    threshold = 5
+    large_diff = last_entries[np.abs(last_entries.value.round() - last_entries.headline) > threshold].copy()
+    large_diff.value = large_diff.value.round()
+
+    print(f"Plots where last point is more than {threshold} away: {len(large_diff)}")
+
+    print(large_diff[["country", "region", "plot_name", "value", "headline"]]
+          .set_index(["country", "region", "plot_name"]).to_markdown())
+
+
+def summarise(f):
 
     results = []
-    for idx, data in enumerate(_extract(filepath), start=1):
-
-        if idx % 6 == 0 and idx > 0:
-            print(f"Processed {idx} summary plots")
+    for idx, data in tqdm(enumerate(_extract(f), start=1), desc="Extracting plot summaries"):
 
         country, region, page_num, plot_elements = data
 

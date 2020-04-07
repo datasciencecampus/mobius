@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
-import os
 import re
 
 import click
-import numpy as np
 import pandas as pd
 from google.cloud.storage.client import Client
-from tqdm import tqdm
 
-from mobius import graph_process, csv_process, prep_output_folder, text
+import mobius.io
+import mobius.csv
+import mobius.extraction
+
+from mobius import graph_process, prep_output_folder
 
 SVG_BUCKET = "mobility-reports"
 
@@ -102,7 +103,7 @@ def download(country_code, svg, pdf):
 @cli.command(help="Process a given country SVG")
 @click.argument("INPUT_LOCATION")
 @click.argument("OUTPUT_FOLDER")
-@click.argument("DATES_FILE", default="config/dates_lookup.csv")
+@click.argument("DATES_FILE", default=None)
 @click.option(
     "-f", "--folder", help="If provided will overwrite the output folder name",
 )
@@ -117,76 +118,37 @@ def download(country_code, svg, pdf):
 )
 def proc(input_location, output_folder, folder, dates_file, svgs, plots):
 
-    date_lookup_df = pd.read_csv(dates_file)
+    date_lookup_df = mobius.io.read_dates_lookup(dates_file)
 
     print(f"Processing {input_location}")
     output_folder = prep_output_folder(input_location, output_folder, folder)
     data = graph_process(input_location, output_folder, svgs)
 
-    iterable = tqdm(data.items())
-    return [
-        csv_process(paths, num, date_lookup_df, output_folder, plots=plots, save=True)
-        for num, paths in iterable
-    ]
+    mobius.csv.process_all(data, date_lookup_df, output_folder, plots, save=True)
 
 
 @cli.command(help="Combine text extracted from PDF with SVG plot data")
 @click.argument("INPUT_PDF")
 @click.argument("INPUT_SVG")
 @click.argument("OUTPUT_FOLDER")
-def knit(input_pdf, input_svg, output_folder, dates_file="config/dates_lookup.csv"):
+def full(input_pdf, input_svg, output_folder, dates_file=None):
 
-    def validate(df):
-        df.headline = df.headline.str.replace("%", "", regex=False)
-        df.loc[df.headline.str.contains("Not enough data", regex=False), "headline"] = np.nan
-        df.headline = df.headline.astype(float)
-        last_entries = df.dropna().groupby(by=["region", "plot_name"]).tail(1)
+    with mobius.io.open_document(input_pdf) as doc:
+        summary_df = mobius.extraction.summarise(doc)
 
-        print(f"There are {len(last_entries)} plots with data")
-
-        invalid_df = last_entries[last_entries.value.round() != last_entries.headline]
-
-        print(f"There are {len(invalid_df)} plots where the last data point doesn't match the headline figure")
-
-        print(invalid_df[["country", "region", "plot_name", "value", "headline"]]
-        .set_index(["country", "region", "plot_name"]).to_markdown())
-
-    print(f"Knitting {input_pdf} and {input_svg} data together")
-    summary_df = text.summarise(input_pdf)
-
-    outfile = os.path.join(output_folder, os.path.splitext(os.path.basename(input_pdf))[0] + "_summary.csv")
-    summary_df.to_csv(outfile, index=False)
+    mobius.io.write_summary(summary_df, input_pdf, output_folder)
 
     data = graph_process(input_svg, None, False)
 
-    date_lookup_df = pd.read_csv(dates_file)
+    date_lookup_df = mobius.io.read_dates_lookup(dates_file)
 
-    iterable = tqdm(data.items())
-    dfs = [
-        csv_process(paths, num, date_lookup_df, output_folder, plots=False, save=True)
-        for num, paths in iterable
-    ]
+    svg_df = mobius.csv.process_all(data, date_lookup_df)
 
-    plot_df = pd.concat(dfs)
+    result_df = pd.merge(summary_df, svg_df, left_on="plot_num", right_on="graph_num", how="outer")
 
-    result_df = pd.merge(summary_df, plot_df, left_on="plot_num", right_on="graph_num", how="outer")
+    mobius.extraction.validate(result_df)
 
-    final_outfile = os.path.join(output_folder, os.path.splitext(os.path.basename(input_pdf))[0] + ".csv")
-    result_df = result_df[[
-        "country",
-        "region",
-        "plot_name",
-        "page_num",
-        "plot_num",
-        "asterisk",
-        "date",
-        "value",
-        "headline",
-    ]]
-
-    result_df.to_csv(final_outfile, index=False)
-
-    validate(result_df)
+    mobius.io.write_full_results(result_df, input_pdf, output_folder)
 
 
 if __name__ == "__main__":
