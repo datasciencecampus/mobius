@@ -34,8 +34,11 @@ class PageData:
     __COUNTRY_NAME_FIXED_BOX = (20, 740, 580, 780)
     __HEADING_DATE_STRING = "March 29, 2020"
 
-    __COUNTRY_HEADLINE_OFFSETS = (-130, -20, -20, 40)
-    __COUNTRY_PLOT_NAME_OFFSETS = (-130, 40, -20, 60)
+    # Note these are set to cover multiple cases
+    # In particular see Liechtenstein (LI) where "Not enough data for this date"
+    # plots shift the relative locations on the page
+    __COUNTRY_HEADLINE_OFFSETS = (-170, -20, -20, 30)
+    __COUNTRY_PLOT_NAME_OFFSETS = (-170, 40, -20, 60)
 
     __HEADLINE_OFFSETS = (-10, 45, 140, 65)
     __PLOT_NAME_OFFSETS = (-5, 70, 100, 90)
@@ -70,6 +73,7 @@ class PageData:
 
         if self.page_num in PageData.__COUNTRY_PAGES:
             offset = PageData.__COUNTRY_HEADLINE_OFFSETS
+
         else:
             offset = PageData.__HEADLINE_OFFSETS
 
@@ -100,7 +104,11 @@ class PageData:
 
         plot_names = [text.object for text in boxes]
 
-        clean_names = [name for name in plot_names if "baseline" not in name]
+        clean_names = [
+            name for name in plot_names
+            if "baseline" not in name
+               and not name.startswith("*\n")
+        ]
         asterisks = ["*" for name in plot_names if "baseline" in name]
 
         plot_name = "".join(clean_names + asterisks)
