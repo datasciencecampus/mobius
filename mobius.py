@@ -26,21 +26,18 @@ def get(filetype="SVG", regex="\d{4}-\d{2}-\d{2}_.+"):
     return list(blobs)
 
 
-def get_country(blob, svg):
+def get_country(blob):
     name = blob.name.split("/")[-1]
-    if svg:
-        country = name.split("_")[1]
-    else:
-        country = name.replace("Mobility_Report_en.pdf", "")[11:-1]
+    country = name.replace("Mobility_Report_en", "")[11:-5]
     return country
 
 
-def show(filetype, svg=True):
+def show(filetype):
     MAXLEN = 20
     blobs = list(get(filetype=filetype))
     print("Available countries:")
     for i, blob in enumerate(blobs):
-        country = get_country(blob, svg)
+        country = get_country(blob)
         country = (
             country + (" " * (MAXLEN - len(country)))
             if len(country) < MAXLEN
@@ -67,7 +64,7 @@ def svg():
 
 @cli.command(help="List all the PDFs available in the buckets")
 def pdf():
-    show("PDF", svg=False)
+    show("PDF")
 
 
 @cli.command()
@@ -85,10 +82,13 @@ def download(country_code, svg, pdf):
         if len(blobs):
             for blob in blobs:
                 extension = "svg" if svg else "pdf"
-                with open(f"{extension}s/{get_country(blob, svg)}.{extension}", "wb+") as fileobj:
+                fname = f"{extension}s/{get_country(blob)}.{extension}"
+                with open(fname, "wb+") as fileobj:
                     client.download_blob_to_file(blob, fileobj)
 
-            print(f"Download {country_code} {extension} complete. Saved to /{extension}s")
+            print(
+                f"Download {country_code} {extension} complete. Saved to /{extension}s"
+            )
         else:
             print(f"Could not find a {extension} file for code {country_code}")
 
