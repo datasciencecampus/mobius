@@ -77,6 +77,15 @@ Options:
   --help             Show this message and exit.
 ```
 
+3. **(Alternative) Run the `mobius.py full` command**
+```text
+Usage: mobius.py full [OPTIONS] INPUT_PDF INPUT_SVG OUTPUT_FOLDER
+
+  Combine text extracted from PDF with SVG plot data
+
+Options:
+  --help  Show this message and exit.
+```
 Specify the input file for the individual country as the `INPUT_LOCATION` and the
 output folder where you want the CSV and other files to be saved to (e.g.
 `./output`).
@@ -118,3 +127,10 @@ CSV datasets for G20 countries (except Russia and China) can be found at the [Da
 Any suggestions or issues, please use the Issues template. We welcome
 collaborators. To help us with this work, fork the repository and issue a Pull
 Request when you have added a feature, or fixed a bug. Thanks!
+
+## External Dependencies
+
+This project depends on `spatialindex`, required for the `Rtree` library.
+
+On OSX this requires installation:
+`brew install spatialindex`
