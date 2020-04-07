@@ -5,7 +5,7 @@
 </p>
 
 For extracting **every** graph from **any** [Google's COVID-19 Community Mobility Report](https://www.google.com/covid19/mobility/) (182) into
-comma separated value (CSV) files. This code is developed at _speed_ on the COVID-19 Community Mobility Report PDF documents published on Friday 3rd of April 2020. 
+comma separated value (CSV) files. This code is developed at _speed_ on the COVID-19 Community Mobility Report PDF documents published on Friday 3rd of April 2020.
 
 ## Installation
 
@@ -38,7 +38,7 @@ python ./mobius.py svg
 python ./mobius.py download <COUNTRY_CODE>
 
 # process it
-python ./mobius.py proc <COUNTRY_CODE> <OUTPUT_FOLDER>
+python ./mobius.py proc <INPUT_LOCATION> <OUTPUT_FOLDER>
 ```
 
 1. **Check for, and download, SVG and PDF files using `mobius.py svg` and `mobius.py download` commands**:
