@@ -156,7 +156,7 @@ def graph_process(input_file, output_folder, save=True):
     OUTPUT[num] = path_buffer
 
     """Checks order"""
-    NEW_OUTPUT = check_output_order(OUTPUT, save, output_folder)
+    OUTPUT = check_output_order(OUTPUT, save, output_folder)
 
     return OUTPUT
 
