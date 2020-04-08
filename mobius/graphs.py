@@ -44,12 +44,7 @@ def graph_process(input_file, output_folder, save=True):
 
     def convert_list_to_dict(lst):
         """Converts a list (with lists in) to a dictionary"""
-        new_dict = {}
-        num = 1
-        for item in lst:
-            new_dict[num] = item
-            num += 1
-        return new_dict
+        return dict(enumerate(lst, start=1))
 
     def check_output_order(output, save, output_folder):
         """Checks the SVGs are in the correct order, and if not, reorders them.
