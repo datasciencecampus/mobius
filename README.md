@@ -141,10 +141,11 @@ Creates a full CSV joined to the data extracted from the SVG plots
 ```text
 Usage: mobius.py full [OPTIONS] INPUT_PDF INPUT_SVG OUTPUT_FOLDER
 
-  Combine text extracted from PDF with SVG plot data
+  Produce full CSV of trend data from PDF/SVG input
 
 Options:
-  --help  Show this message and exit.
+  -d, --dates_file TEXT  Override date lookup file
+  --help                 Show this message and exit.
 ```
 Specify an input PDF for an individual country as `INPUT_PDF` along with a single
 file SVG of that PDF as `INPUT_SVG`.

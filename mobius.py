@@ -138,7 +138,7 @@ def summary(input_pdf, output_folder):
 @click.argument("INPUT_PDF", type=click.Path(exists=True))
 @click.argument("INPUT_SVG", type=click.Path(exists=True))
 @click.argument("OUTPUT_FOLDER")
-@click.argument("DATES_FILE", default=None)
+@click.option("-d", "--dates_file", help="Override date lookup file", default=None)
 def full(input_pdf, input_svg, output_folder, dates_file=None):
 
     with mobius.io.open_document(input_pdf) as doc:
