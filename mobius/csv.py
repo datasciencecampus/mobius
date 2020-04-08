@@ -1,18 +1,29 @@
+# -*- coding: utf-8 -*-
 """Take SVG files of individual plots and convert them to CSV."""
-# stdlib
 import os
 
-# third party
-import click
 import pandas as pd
 import svgpathtools
 from matplotlib import pyplot as plt
+from tqdm import tqdm
 
 Y_AXIS_SPAN = 80  # Distance in percentage points from baseline to upper and lower lines
 X_AXIS_SPAN = 42  # Distance covered by x-axis in days
 
 
-def csv_process(paths, name, date_lookup, output_folder, plots=True, save=None):
+def process_all(data, date_lookup_df, output_folder=None, plots=True, save=None):
+    iterable = tqdm(data.items(), desc="Extracting data from SVG plots")
+    dfs = [
+        csv_process(paths, num, date_lookup_df, output_folder, plots, save)
+        for num, paths in iterable
+    ]
+
+    svg_df = pd.concat(dfs)
+
+    return svg_df
+
+
+def csv_process(paths, name, date_lookup, output_folder=None, plots=True, save=None):
     # Gets paths from file
     xlim, y_lines, trend = categorise_paths(paths, name, date_lookup)
 
@@ -35,7 +46,9 @@ def csv_process(paths, name, date_lookup, output_folder, plots=True, save=None):
     result_df["graph_num"] = name
 
     if save:
-        os.mkdir(f"{output_folder}/csv") if not os.path.exists(f"{output_folder}/csv") else False
+        os.mkdir(f"{output_folder}/csv") if not os.path.exists(
+            f"{output_folder}/csv"
+        ) else False
         result_df.to_csv(
             os.path.join(output_folder, f"csv/{name}.csv"),
             sep=",",
@@ -43,14 +56,16 @@ def csv_process(paths, name, date_lookup, output_folder, plots=True, save=None):
             float_format="%.3f",
         )
 
-    if plots:
-        os.mkdir(f"{output_folder}/plot") if not os.path.exists(f"{output_folder}/plot") else False
+    if plots and output_folder:
+        os.mkdir(f"{output_folder}/plot") if not os.path.exists(
+            f"{output_folder}/plot"
+        ) else False
         plt.plot(result_df.date, result_df.value)
         plt.ylim(-80, 80)
         plt.xticks(rotation=90)
-        plt.xlabel('Date')
-        plt.ylabel('Mobility change %')
-        plt.axhline(y=0.5, color='k', linestyle='--', linewidth=0.5)
+        plt.xlabel("Date")
+        plt.ylabel("Mobility change %")
+        plt.axhline(y=0.5, color="k", linestyle="--", linewidth=0.5)
         plt.tight_layout()
         plt.savefig(os.path.join(output_folder, f"plot/{name}.png"))
 
