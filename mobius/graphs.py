@@ -82,7 +82,7 @@ def graph_process(input_file, output_folder, save=True):
                 original_order = list(range(0, 12))
 
                 for num in range(len(block)):
-                    """Rough way of getting block graphs in order. Scale x value larger as it is the most important"""
+                    """Rough way of getting block graphs in order. Scale y value larger as it is the most important"""
                     graph_count += 1
                     order_value = (round(float(str(block[num][2][0].start).split('+')[-1].split('j')[0]), -2) * 1000) + \
                                   float((str(block[num][2][0].start).split('+')[0].split('(')[-1]))
