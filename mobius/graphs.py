@@ -45,6 +45,7 @@ def graph_process(input_file, output_folder, save=True):
         return num, path_buffer, state
 
     def convert_list_to_dict(lst):
+        """Converts a list (with lists in) to a dictionary"""
         new_dict = {}
         num = 1
         for item in lst:
@@ -52,32 +53,38 @@ def graph_process(input_file, output_folder, save=True):
             num += 1
         return new_dict
 
-    def reorder_output(output, save, output_folder):
+    def check_output_order(output, save, output_folder):
         """Checks the SVGs are in the correct order, and if not, reorders them.
         Doesn't check first six figures order currently. Assumes these are correct.
         """
-        output_orderer = []
+        output_order = []
         output_order_list = [1, 2, 3, 4, 5, 6]
 
         if len(output) > 6:
+
             for block_start_num in range(1, 7, 6):
+                """Adds first 6 graphs in order as is"""
                 keys = list(range(block_start_num, block_start_num + 6))
                 block = [output.get(key) for key in keys]
                 for num in range(len(block)):
-                    output_orderer.append(block[output_order_list[num]-1])
+                    output_order.append(block[output_order_list[num]-1])
 
             for block_start_num in range(7, len(output), 12):
                 if len(output) - block_start_num > 6:
+                    """For pages with 12 graphs on"""
                     keys = list(range(block_start_num, block_start_num + 12))
                 else:
+                    """For last page if it only has 6 graphs on"""
                     keys = list(range(block_start_num, block_start_num + 6))
-                block = [output.get(key) for key in keys]
-                graph_count = 0
 
+                block = [output.get(key) for key in keys]
+
+                graph_count = 0
                 order_values = []
                 original_order = list(range(0, 12))
 
                 for num in range(len(block)):
+                    """Rough way of getting block graphs in order. Scale x value larger as it is the most important"""
                     graph_count += 1
                     order_value = (round(float(str(block[num][2][0].start).split('+')[-1].split('j')[0]), -2) * 1000) + \
                                   float((str(block[num][2][0].start).split('+')[0].split('(')[-1]))
@@ -87,12 +94,15 @@ def graph_process(input_file, output_folder, save=True):
                 output_order_list += [x + block_start_num for x in new_order]
 
                 for num in range(len(block)):
-                    output_orderer.append(block[new_order[num]])
+                    """Reorder block based on new order"""
+                    output_order.append(block[new_order[num]])
         else:
-            output_orderer = output
+            """Do nothing"""
+            output_order = output
 
         if save:
-            """Renames SVG files accordingly if saved.
+            """Renames SVG files accordingly if saved. Saves new plots to tmp folder, then deletes original svg
+            folder and renames tmp to svg.
             """
             os.mkdir(f"{output_folder}/tmp") if not os.path.exists(f"{output_folder}/tmp") else False
             files = os.listdir(f"{output_folder}/svg")
@@ -109,9 +119,11 @@ def graph_process(input_file, output_folder, save=True):
             shutil.rmtree(f"{output_folder}/svg")
             os.rename(f"{output_folder}/tmp", f"{output_folder}/svg")
 
-        output_orderer = convert_list_to_dict(output_orderer)
+        """Convert list to dictionary"""
+        output_order = convert_list_to_dict(output_order)
 
-        return output_orderer
+        return output_order
+
 
     logging.info(f"Processing {input_file}")
 
@@ -150,7 +162,8 @@ def graph_process(input_file, output_folder, save=True):
 
     OUTPUT[num] = path_buffer
 
-    OUTPUT = reorder_output(OUTPUT, save, output_folder)
+    """Checks order"""
+    OUTPUT = check_output_order(OUTPUT, save, output_folder)
 
     return OUTPUT
 
