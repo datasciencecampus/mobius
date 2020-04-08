@@ -44,6 +44,9 @@ python ./mobius.py ls
 # check if your svg is available
 python ./mobius.py svg <COUNTRY_CODE>
 
+# Download pdf and svg
+python ./mobius.py download <COUNTRY_CODE>
+
 # process it
 python ./mobius.py summary <INPUT_PDF> <OUTPUT_FOLDER>
 python ./mobius.py full <INPUT_PDF> <INPUT_SVG> <OUTPUT_FOLDER>
