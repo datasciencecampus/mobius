@@ -91,7 +91,12 @@ def graph_process(input_file, output_folder, save=True):
                     output_order.append(block[new_order[num]])
         else:
             """Do nothing"""
-            output_order = output
+            for block_start_num in range(1, 7, 6):
+                """Adds first 6 graphs in order as is"""
+                keys = list(range(block_start_num, block_start_num + 6))
+                block = [output.get(key) for key in keys]
+                for num in range(len(block)):
+                    output_order.append(block[output_order_list[num]-1])
 
         if save:
             """Renames SVG files accordingly if saved. Saves new plots to tmp folder, then deletes original svg
@@ -158,7 +163,7 @@ def graph_process(input_file, output_folder, save=True):
     OUTPUT[num] = path_buffer
 
     """Checks order"""
-    OUTPUT = check_output_order(OUTPUT, save, output_folder)
+    NEW_OUTPUT = check_output_order(OUTPUT, save, output_folder)
 
     return OUTPUT
 
