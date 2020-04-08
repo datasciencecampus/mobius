@@ -60,7 +60,7 @@ def csv_process(paths, name, date_lookup, output_folder=None, plots=True, save=N
         os.mkdir(f"{output_folder}/plot") if not os.path.exists(
             f"{output_folder}/plot"
         ) else False
-        plt.plot(result_df.date, result_df.value)
+        plt.plot(result_df.date, result_df.value, '-o')
         plt.ylim(-80, 80)
         plt.xticks(rotation=90)
         plt.xlabel("Date")
@@ -137,7 +137,7 @@ def categorise_paths(paths, name, date_lookup):
 
 
 def convert_units(trend, line_y, xlim, yspan, xspan):
-    """witch from SVG coordinates to plot coordinates
+    """Switch from SVG coordinates to plot coordinates
 
     Args:
         trend: points on the trend line
