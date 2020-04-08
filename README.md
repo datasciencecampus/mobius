@@ -100,7 +100,7 @@ Options:
   --help  Show this message and exit.
 ```
 
-1. **Run the `mobius.py summary` command**
+2. **Run the `mobius.py summary` command**
 ```text
 Usage: mobius.py summary [OPTIONS] INPUT_PDF OUTPUT_FOLDER
 
@@ -117,14 +117,15 @@ and the output folder where you want the CSV to (e.g.
 Creates a summary CSV joined to the data extracted from the SVG plots
 `<OUTPUT_FOLDER>/<INPUT_PDF_BASENAME>_summary.csv`.
 
-1. **Run the `mobius.py full` command**
-```
+3. **Run the `mobius.py full` command**
+```text
 Usage: mobius.py full [OPTIONS] INPUT_PDF INPUT_SVG OUTPUT_FOLDER
 
   Produce full CSV of trend data from PDF/SVG input
 
 Options:
-  --help  Show this message and exit.
+  -d, --dates_file TEXT  Override date lookup file
+  --help                 Show this message and exit.
 ```
 
 Specify the input pdf/svg file for the individual country as the `INPUT_PDF`/`INPUT_SVG`,
@@ -136,32 +137,11 @@ Optionally pass in a custom the dates lookup file (e.g.
 
 Creates a full CSV joined to the data extracted from the SVG plots
 `<OUTPUT_FOLDER>/<INPUT_PDF_BASENAME>.csv`.
-
-1. **Run the `mobius.py full` command**
-```text
-Usage: mobius.py full [OPTIONS] INPUT_PDF INPUT_SVG OUTPUT_FOLDER
-
-  Produce full CSV of trend data from PDF/SVG input
-
-Options:
-  -d, --dates_file TEXT  Override date lookup file
-  --help                 Show this message and exit.
-```
-Specify an input PDF for an individual country as `INPUT_PDF` along with a single
-file SVG of that PDF as `INPUT_SVG`.
-
-Command will create two CSVs and save them in `OUTPUT_FOLDER` (names based 
-on `INPUT_PDF` name):
-
-* Summary CSV of just the headline figures for each region/category
-    (`<OUTPUT_FOLDER>/<INPUT_PDF>_summary.csv`)
-* Summary CSV joined to the data extracted from the SVG plots
-    (`<OUTPUT_FOLDER>/<INPUT_PDF>.csv`)
     
-Result of command is a short summary of any discrepancies between the summary figures
+Command gives a short summary of any discrepancies between the summary figures
 and the data extracted from svg plots.
 
-1. **(Alternative) Run the `mobius.py proc` command**
+4. **(Alternative) Run the `mobius.py proc` command**
 
 ```text
 Usage: mobius.py proc [OPTIONS] INPUT_LOCATION OUTPUT_FOLDER [DATES_FILE]
