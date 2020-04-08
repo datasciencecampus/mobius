@@ -47,6 +47,7 @@ python ./mobius.py download <COUNTRY_CODE>
 # process it
 python ./mobius.py summary <INPUT_PDF> <OUTPUT_FOLDER>
 python ./mobius.py full <INPUT_PDF> <INPUT_SVG> <OUTPUT_FOLDER>
+
 ```
 
 ### Full command list
@@ -189,6 +190,15 @@ CSV datasets for G20 countries (except Russia and China) can be found at the [Da
    1. `File > Export > SVG (for print)` if using **version 1.6.3** or `File > Export > SVG (digital - high quality)` for **version 1.8.3**
    1. Select Area: Whole Document.
    1. Save the SVG file to (`./svgs`).
+   
+## Utility script
+
+To run through all available countries see `run_all.sh`.
+
+```shell
+# Create summary and full CSVs for all countries returned by ./mobius.py ls
+./run_all.sh
+```
 
 ## Contributing
 

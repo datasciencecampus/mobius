@@ -1,13 +1,11 @@
+# -*- coding: utf-8 -*-
 """Extract subplots from whole pages/documents in SVG format."""
-# stdlib
-import os
 import logging
 import re
 import shutil
+import os
 
-# third party
 import svgpathtools
-from tqdm import tqdm
 
 
 def graph_process(input_file, output_folder, save=True):
@@ -155,7 +153,9 @@ def graph_process(input_file, output_folder, save=True):
         path_buffer.append((path, attribute))
 
     if save:
-        os.mkdir(f"{output_folder}/svg/") if not os.path.exists(f"{output_folder}/svg/") else False
+        os.mkdir(f"{output_folder}/svg") if not os.path.exists(
+            f"{output_folder}/svg"
+        ) else False
         # TODO: see if this can be in clear buffer.
         # Don't forget the last graph in the buffer
         save_subplot(path_buffer, output_folder, num)
