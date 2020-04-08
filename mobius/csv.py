@@ -45,7 +45,7 @@ def csv_process(paths, name, date_lookup, output_folder, plots=True, save=None):
 
     if plots:
         os.mkdir(f"{output_folder}/plot") if not os.path.exists(f"{output_folder}/plot") else False
-        plt.plot(result_df.date, result_df.value)
+        plt.plot(result_df.date, result_df.value, '-o')
         plt.ylim(-80, 80)
         plt.xticks(rotation=90)
         plt.xlabel('Date')
