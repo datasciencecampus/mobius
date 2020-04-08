@@ -47,6 +47,7 @@ python ./mobius.py download <COUNTRY_CODE>
 # process it
 python ./mobius.py summary <INPUT_PDF> <OUTPUT_FOLDER>
 python ./mobius.py full <INPUT_PDF> <INPUT_SVG> <OUTPUT_FOLDER>
+
 ```
 
 ### Full command list
