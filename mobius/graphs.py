@@ -79,8 +79,8 @@ def graph_process(input_file, output_folder, save=True):
                 for num in range(len(block)):
                     """Rough way of getting block graphs in order. Scale y value larger as it is the most important"""
                     graph_count += 1
-                    order_value = (round(float(str(block[num][2][0].start).split('+')[-1].split('j')[0]), -2) * 1000) + \
-                                  float((str(block[num][2][0].start).split('+')[0].split('(')[-1]))
+                    order_path = block[num][2][0]
+                    order_value = round(order_path.start.imag, -2) * 1000 + order_path.start.real                   
                     order_values.append(order_value)
 
                 new_order = [x for _, x in sorted(zip(order_values, original_order))]
