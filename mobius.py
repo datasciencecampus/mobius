@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import re
+import os
 
 import click
 import pandas as pd
@@ -27,23 +28,33 @@ def get_country(blob):
 
 
 def show(filetype):
+    country_names = pd.read_csv(os.path.join(os.getcwd(),'config/country_codes.csv'))
     MAXLEN = 25
+    MAXLEN_COUNTRY = 40
     blobs = list(get(filetype=filetype))
     print("Available countries:")
     for i, blob in enumerate(blobs):
         country = get_country(blob)
+        country_name = country_names.loc[country_names['code'] == f"-{country[0:2]}", 'name'].item()
         country = (
             country + (" " * (MAXLEN - len(country)))
             if len(country) < MAXLEN
             else country[:MAXLEN]
         )
+        country_name = (
+            country_name + (" " * (MAXLEN_COUNTRY - len(country_name)))
+            if len(country_name) < MAXLEN_COUNTRY
+            else country_name[:MAXLEN_COUNTRY]
+        )
+
+
         iteration = str(i + 1)
         iteration = (
             iteration
             if (len(iteration) == 3)
             else (" " * (3 - len(iteration)) + iteration)
         )
-        print(f" {iteration}. {country} ({blob.name})")
+        print(f" {iteration}. {country} {country_name} ({blob.name})")
 
 
 @click.group(help="Downloader and processor for Google mobility reports")
