@@ -11,6 +11,6 @@ for COUNTRY in "${COUNTRIES[@]}"
 do  
     echo Running for "${COUNTRY}"
     ./mobius.py download "${COUNTRY}"
- 
-    ./mobius.py full pdfs/"${COUNTRY}".pdf svgs/"${COUNTRY}".svg output
+
+    ./mobius.py summary pdfs/"${COUNTRY}".pdf output
 done
