@@ -23,6 +23,7 @@ def write_summary(df, input_pdf, output_folder):
 
     outpath = os.path.join(output_folder, out_filename)
     df.to_csv(outpath, index=False, float_format="%.3f",)
+    print(f"Saved summary results to {outpath}")
 
 
 def write_full_results(df, input_pdf, output_folder):
@@ -45,6 +46,7 @@ def write_full_results(df, input_pdf, output_folder):
     ]
 
     df[relevant_columns].to_csv(outpath, index=False, float_format="%.3f")
+    print(f"Saved full results to {outpath}")
 
 
 @contextmanager

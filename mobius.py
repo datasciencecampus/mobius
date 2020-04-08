@@ -8,14 +8,14 @@ from google.cloud.storage.client import Client
 
 import mobius
 
-SVG_BUCKET = "mobility-reports"
+BUCKET = "mobility-reports"
 
 
 def get(filetype="SVG", regex="\d{4}-\d{2}-\d{2}_.+"):
     client = Client.create_anonymous_client()
     blobs = filter(
         lambda b: re.match(f"{filetype}/{regex}", b.name),
-        client.list_blobs(SVG_BUCKET),
+        client.list_blobs(BUCKET),
     )
     return list(blobs)
 
@@ -27,7 +27,7 @@ def get_country(blob):
 
 
 def show(filetype):
-    MAXLEN = 20
+    MAXLEN = 25
     blobs = list(get(filetype=filetype))
     print("Available countries:")
     for i, blob in enumerate(blobs):
@@ -51,6 +51,11 @@ def cli():
     pass
 
 
+@cli.command(help="List all the PDFs available in the buckets")
+def ls():
+    show("PDF")
+
+
 @cli.command(help="List all the SVGs available in the buckets")
 def svg():
     show("SVG")
@@ -61,24 +66,16 @@ def pdf():
     show("PDF")
 
 
-@cli.command(help="Download svg for a given country using the country code")
+@cli.command(help="Download pdf and svg for a given country using the country code")
 @click.argument("COUNTRY_CODE")
-@click.option(
-    "-s", "--svg", help="Download SVG of the country code", is_flag=True, default=True,
-)
-@click.option(
-    "-p", "--pdf", help="Download PDF of the country code", is_flag=True,
-)
-def download(country_code, svg, pdf):
+def download(country_code):
     client = Client.create_anonymous_client()
 
-    def _download(blobs, svg):
-        extension = "svg" if svg else "pdf"
+    def _download(blobs, extension):
 
         if len(blobs):
             for blob in blobs:
 
-                extension = "svg" if svg else "pdf"
                 fname = f"{extension}s/{get_country(blob)}.{extension}"
                 with open(fname, "wb+") as fileobj:
 
@@ -90,14 +87,13 @@ def download(country_code, svg, pdf):
         else:
             print(f"Could not find a {extension} file for code {country_code}")
 
-    if svg:
-        regex = f"\d{{4}}-\d{{2}}-\d{{2}}_{country_code}_.+"
-        blobs = get(filetype="SVG", regex=regex)
-        _download(blobs, True)
-    if pdf:
-        regex = f"\d{{4}}-\d{{2}}-\d{{2}}_{country_code}_.+"
-        blobs = get(filetype="PDF", regex=regex)
-        _download(blobs, False)
+    regex = f"\d{{4}}-\d{{2}}-\d{{2}}_{country_code}_M.+"
+
+    blobs = get(filetype="SVG", regex=regex)
+    _download(blobs, "svg")
+
+    blobs = get(filetype="PDF", regex=regex)
+    _download(blobs, "pdf")
 
 
 @cli.command(help="Process a given country SVG")
@@ -127,16 +123,26 @@ def proc(input_location, output_folder, folder, dates_file, svgs, plots):
     mobius.csv.process_all(data, date_lookup_df, output_folder, plots, save=True)
 
 
-@cli.command(help="Combine text extracted from PDF with SVG plot data")
-@click.argument("INPUT_PDF")
-@click.argument("INPUT_SVG")
+@cli.command(help="Produce summary CSV of regional headline figures from CSV")
+@click.argument("INPUT_PDF", type=click.Path(exists=True))
 @click.argument("OUTPUT_FOLDER")
-def full(input_pdf, input_svg, output_folder, dates_file=None):
+def summary(input_pdf, output_folder):
 
     with mobius.io.open_document(input_pdf) as doc:
         summary_df = mobius.extraction.summarise(doc)
 
     mobius.io.write_summary(summary_df, input_pdf, output_folder)
+
+
+@cli.command(help="Produce full CSV of trend data from PDF/SVG input")
+@click.argument("INPUT_PDF", type=click.Path(exists=True))
+@click.argument("INPUT_SVG", type=click.Path(exists=True))
+@click.argument("OUTPUT_FOLDER")
+@click.option("-d", "--dates_file", help="Override date lookup file", default=None)
+def full(input_pdf, input_svg, output_folder, dates_file=None):
+
+    with mobius.io.open_document(input_pdf) as doc:
+        summary_df = mobius.extraction.summarise(doc)
 
     data = mobius.graphs.graph_process(input_svg, None, False)
 
