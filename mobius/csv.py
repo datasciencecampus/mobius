@@ -122,7 +122,7 @@ def categorise_paths(paths, name, date_lookup):
 
 
 def convert_units(trend, line_y, xlim, yspan, xspan):
-    """witch from SVG coordinates to plot coordinates
+    """Switch from SVG coordinates to plot coordinates
 
     Args:
         trend: points on the trend line

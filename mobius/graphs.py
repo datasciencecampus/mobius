@@ -2,6 +2,8 @@
 # stdlib
 import os
 import logging
+import re
+import shutil
 
 # third party
 import svgpathtools
@@ -42,6 +44,75 @@ def graph_process(input_file, output_folder, save=True):
         state = "horizontal"
         return num, path_buffer, state
 
+    def convert_list_to_dict(lst):
+        new_dict = {}
+        num = 1
+        for item in lst:
+            new_dict[num] = item
+            num += 1
+        return new_dict
+
+    def reorder_output(output, save, output_folder):
+        """Checks the SVGs are in the correct order, and if not, reorders them.
+        Doesn't check first six figures order currently. Assumes these are correct.
+        """
+        output_orderer = []
+        output_order_list = [1, 2, 3, 4, 5, 6]
+
+        if len(output) > 6:
+            for block_start_num in range(1, 7, 6):
+                keys = list(range(block_start_num, block_start_num + 6))
+                block = [output.get(key) for key in keys]
+                for num in range(len(block)):
+                    output_orderer.append(block[output_order_list[num]-1])
+
+            for block_start_num in range(7, len(output), 12):
+                if len(output) - block_start_num > 6:
+                    keys = list(range(block_start_num, block_start_num + 12))
+                else:
+                    keys = list(range(block_start_num, block_start_num + 6))
+                block = [output.get(key) for key in keys]
+                graph_count = 0
+
+                order_values = []
+                original_order = list(range(0, 12))
+
+                for num in range(len(block)):
+                    graph_count += 1
+                    order_value = (round(float(str(block[num][2][0].start).split('+')[-1].split('j')[0]), -2) * 1000) + \
+                                  float((str(block[num][2][0].start).split('+')[0].split('(')[-1]))
+                    order_values.append(order_value)
+
+                new_order = [x for _, x in sorted(zip(order_values, original_order))]
+                output_order_list += [x + block_start_num for x in new_order]
+
+                for num in range(len(block)):
+                    output_orderer.append(block[new_order[num]])
+        else:
+            output_orderer = output
+
+        if save:
+            """Renames SVG files accordingly if saved.
+            """
+            os.mkdir(f"{output_folder}/tmp") if not os.path.exists(f"{output_folder}/tmp") else False
+            files = os.listdir(f"{output_folder}/svg")
+            files.sort(key=lambda f: int(re.sub('\D', '', f)))
+            num = 0
+            for file in files:
+                if file.endswith(".svg"):
+                    file.split('.')[0]
+
+                    new_file = f"{output_order_list.index(int(file.split('.')[0])) + 1}.svg"
+                    shutil.copyfile(f"{output_folder}/svg/{file}", f"{output_folder}/tmp/{new_file}")
+                    num += 1
+
+            shutil.rmtree(f"{output_folder}/svg")
+            os.rename(f"{output_folder}/tmp", f"{output_folder}/svg")
+
+        output_orderer = convert_list_to_dict(output_orderer)
+
+        return output_orderer
+
     logging.info(f"Processing {input_file}")
 
     paths, attributes = svgpathtools.svg2paths(input_file)
@@ -72,12 +143,14 @@ def graph_process(input_file, output_folder, save=True):
         path_buffer.append((path, attribute))
 
     if save:
-        os.mkdir(f"{output_folder}/svg") if not os.path.exists(f"{output_folder}/svg") else False
+        os.mkdir(f"{output_folder}/svg/") if not os.path.exists(f"{output_folder}/svg/") else False
         # TODO: see if this can be in clear buffer.
         # Don't forget the last graph in the buffer
         save_subplot(path_buffer, output_folder, num)
 
     OUTPUT[num] = path_buffer
+
+    OUTPUT = reorder_output(OUTPUT, save, output_folder)
 
     return OUTPUT
 
