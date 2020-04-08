@@ -1,11 +1,11 @@
 # Mobility Report graph extractor (mobius)
 
 <p align="center">
-    <img src="/meta/logo.png" alt="Logo">
+    <img src="/meta/logo.png" alt="Logo"  height="200px">
 </p>
 
-For extracting graphs from COVID-19 Community Mobility Report PDF into
-comma separated value (CSV) files for each graph. This code is developed at _speed_ on the COVID-19 Community Mobility Report PDF documents published on Friday 3rd of April 2020. 
+For extracting **every** graph from **any** [Google's COVID-19 Community Mobility Report](https://www.google.com/covid19/mobility/) (182) into
+comma separated value (CSV) files. This code is developed at _speed_ on the COVID-19 Community Mobility Report PDF documents published on Friday 3rd of April 2020.
 
 ## Installation
 
@@ -45,7 +45,7 @@ python ./mobius.py svg
 python ./mobius.py download <COUNTRY_CODE>
 
 # process it
-python ./mobius.py proc <COUNTRY_CODE> <OUTPUT_FOLDER>
+python ./mobius.py proc <INPUT_LOCATION> <OUTPUT_FOLDER>
 ```
 
 1. **Check for, and download, SVG and PDF files using `mobius.py svg` and `mobius.py download` commands**:
@@ -149,4 +149,3 @@ CSV datasets for G20 countries (except Russia and China) can be found at the [Da
 Any suggestions or issues, please use the Issues template. We welcome
 collaborators. To help us with this work, fork the repository and issue a Pull
 Request when you have added a feature, or fixed a bug. Thanks!
-
