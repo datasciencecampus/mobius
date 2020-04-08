@@ -20,7 +20,7 @@ fi
 set -e  # Exit on any error
 
 # List all the countries
-COUNTRIES=$(./mobius.py ls | sed -En "s/.*[0-9 \.]+([A-Z]{2}(\-[A-Z][a-z]+)?).*/\1/p")
+COUNTRIES=$(./mobius.py ls | sed -En "s/.*[0-9 \.]+([A-Z]{2}(\-[A-Z][A-Za-z_]+)?).*/\1/p")
 
 COUNTRIES=($COUNTRIES)
 
