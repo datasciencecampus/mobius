@@ -61,13 +61,13 @@ Options:
   --help  Show this message and exit.
 
 Commands:
-  download  Download svg for a given country using the country code
-  full      Produce full CSV of trend data from PDF/SVG input
+  download  Download SVG and PDF for a given country using the country code
+  full      Produce full CSV of trend data from PDF and SVG input
   ls        List all the PDFs available in the buckets
   pdf       List all the PDFs available in the buckets
-  proc      Process a given country SVG
-  summary   Produce summary CSV of regional headline figures from CSV
   svg       List all the SVGs available in the buckets
+  proc      Process a given country's SVG
+  summary   Produce summary CSV of regional headline figures from CSV
 ```
 
 1. **Check for, and download, SVG and PDF files using `mobius.py ls|svg` and `mobius.py download` commands**:
@@ -78,15 +78,15 @@ Commands:
 ```text
 Usage: mobius.py ls [OPTIONS]
 
-  List all the PDFs available in the buckets
+  List all the SVGs available in the buckets
 
 Options:
   --help  Show this message and exit.
 
 
-Usage: mobius.py svg [OPTIONS]
+Usage: mobius.py pdf [OPTIONS]
 
-  List all the SVGs available in the buckets
+  List all the PDFs available in the buckets
 
 Options:
   --help  Show this message and exit.
@@ -94,7 +94,7 @@ Options:
 
 Usage: mobius.py download [OPTIONS] COUNTRY_CODE
 
-  Download pdf and svg for a given country using the country code
+  Download PDF and SVG for a given country using the country code
 
 Options:
   --help  Show this message and exit.

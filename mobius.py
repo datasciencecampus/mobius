@@ -28,6 +28,7 @@ def get_country(blob):
 
 
 def show(filetype):
+    url_prefix = "https://storage.cloud.google.com/mobility-reports/"
     country_names = pd.read_csv(os.path.join(os.getcwd(),'config/country_codes.csv'))
     MAXLEN = 25
     MAXLEN_COUNTRY = 40
@@ -54,7 +55,8 @@ def show(filetype):
             if (len(iteration) == 3)
             else (" " * (3 - len(iteration)) + iteration)
         )
-        print(f" {iteration}. {country} {country_name} ({blob.name})")
+        print(f" {iteration}. {country} {country_name} ({url_prefix + blob.name})")
+
 
 
 @click.group(help="Downloader and processor for Google mobility reports")
@@ -64,7 +66,7 @@ def cli():
 
 @cli.command(help="List all the PDFs available in the buckets")
 def ls():
-    show("PDF")
+    show("SVG")
 
 
 @cli.command(help="List all the SVGs available in the buckets")
