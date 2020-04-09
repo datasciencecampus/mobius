@@ -99,7 +99,7 @@ def categorise_paths(paths, name, date_lookup):
         single_segment_lines.sort(key=lambda p: p.length())
 
         short_trends = single_segment_lines[:-5]
-        single_segment_lines = single_segment_lines[:5]
+        single_segment_lines = single_segment_lines[-5:]
 
     y_lines = sorted([path.start.imag for path in single_segment_lines])
 
