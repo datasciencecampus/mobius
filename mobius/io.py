@@ -5,7 +5,7 @@ from contextlib import contextmanager
 
 import pandas as pd
 
-__DEFAULT_DATES_LOOKUP_FILEPATH = os.path.join("config", "dates_lookup.csv")
+__DEFAULT_DATES_LOOKUP_FILEPATH = os.path.join("config", "dates_lookup_2020_04_05.csv")
 
 
 def read_dates_lookup(filepath=None):
