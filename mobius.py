@@ -10,7 +10,6 @@ from google.cloud.storage.client import Client
 import mobius
 
 BUCKET = "mobility-reports"
-DATE = "2020-04-05"
 
 def get(filetype="SVG", regex="\d{4}-\d{2}-\d{2}_.+"):
     client = Client.create_anonymous_client()
@@ -27,15 +26,42 @@ def get_country(blob):
     return country
 
 
-def show(filetype):
+def show(filetype, date):
     url_prefix = "https://storage.cloud.google.com/mobility-reports/"
     country_names = pd.read_csv(os.path.join(os.getcwd(),'config/country_codes.csv'))
     MAXLEN = 25
     MAXLEN_COUNTRY = 40
     blobs = list(get(filetype=filetype))
     print("Available countries:")
-    for i, blob in enumerate(blobs):
-        if blob.name.split("/")[-1].split('_')[0] == DATE:
+    if date != None:
+        for i, blob in enumerate(blobs):
+            if blob.name.split("/")[-1].split('_')[0] == date:
+                country = get_country(blob)
+                country_name = country_names.loc[country_names['code'] == f"-{country[0:2]}", 'name'].item()
+                country = (
+                    country + (" " * (MAXLEN - len(country)))
+                    if len(country) < MAXLEN
+                    else country[:MAXLEN]
+                )
+                country_name = (
+                    country_name + (" " * (MAXLEN_COUNTRY - len(country_name)))
+                    if len(country_name) < MAXLEN_COUNTRY
+                    else country_name[:MAXLEN_COUNTRY]
+                )
+
+
+                iteration = str(i + 1)
+                iteration = (
+                    iteration
+                    if (len(iteration) == 3)
+                    else (" " * (3 - len(iteration)) + iteration)
+                )
+                print(f" {iteration}. {country} {country_name}  {date}  ({url_prefix + blob.name})")
+
+    else:
+        print('x')
+        for i, blob in enumerate(blobs):
+            pdf_date = blob.name.split("/")[-1].split('_')[0]
             country = get_country(blob)
             country_name = country_names.loc[country_names['code'] == f"-{country[0:2]}", 'name'].item()
             country = (
@@ -56,7 +82,7 @@ def show(filetype):
                 if (len(iteration) == 3)
                 else (" " * (3 - len(iteration)) + iteration)
             )
-            print(f" {iteration}. {country} {country_name} ({url_prefix + blob.name})")
+            print(f" {iteration}. {country} {country_name}  {pdf_date}   ({url_prefix + blob.name})")
 
 
 
@@ -66,33 +92,37 @@ def cli():
 
 
 @cli.command(help="List all the PDFs available in the buckets")
-def ls():
-    show("PDF")
+@click.argument("DATE", required = False)
+def ls(date):
+    show("PDF", date)
 
 
 @cli.command(help="List all the SVGs available in the buckets")
-def svg():
-    show("SVG")
+@click.argument("DATE", required = False)
+def svg(date):
+    show("SVG", date)
 
 
 @cli.command(help="List all the PDFs available in the buckets")
-def pdf():
-    show("PDF")
+@click.argument("DATE", required = False)
+def pdf(date):
+    show("PDF", date)
 
 
 @cli.command(help="Download pdf and svg for a given country using the country code")
 @click.argument("COUNTRY_CODE")
-def download(country_code):
+@click.argument("DATE", required = False)
+def download(country_code, date):
     client = Client.create_anonymous_client()
 
-    def _download(blobs, extension):
+    def _download(blobs, extension, date):
 
         download_count = 0
 
-        if len(blobs):
+        if len(blobs) and date != None:
             for blob in blobs:
-                if blob.name.split("/")[-1].split('_')[0] == DATE:
-                    fname = f"{extension}s/{get_country(blob)}.{extension}"
+                if blob.name.split("/")[-1].split('_')[0] == date:
+                    fname = f"{extension}s/{get_country(blob)}_{date}.{extension}"
                     with open(fname, "wb+") as fileobj:
 
                         client.download_blob_to_file(blob, fileobj)
@@ -102,16 +132,35 @@ def download(country_code):
                     )
                     download_count += 1
 
+        if len(blobs) and date == None:
+            for blob in blobs:
+                pdf_date = blob.name.split("/")[-1].split('_')[0]
+                fname = f"{extension}s/{get_country(blob)}_{pdf_date}.{extension}"
+                with open(fname, "wb+") as fileobj:
+
+                    client.download_blob_to_file(blob, fileobj)
+
+                print(
+                    f"Download {country_code}_{pdf_date} {extension} complete. Saved to /{extension}s"
+                )
+                download_count += 1
+
+
+
         if download_count == 0:
             print(f"Could not find a {extension} file for code {country_code}")
+
+        
+
+
 
     regex = f"\d{{4}}-\d{{2}}-\d{{2}}_{country_code}_M.+"
 
     blobs = get(filetype="SVG", regex=regex)
-    _download(blobs, "svg")
+    _download(blobs, "svg", date)
 
     blobs = get(filetype="PDF", regex=regex)
-    _download(blobs, "pdf")
+    _download(blobs, "pdf", date)
 
 
 @cli.command(help="Process a given country SVG")
