@@ -88,7 +88,7 @@ def download(country_code, date):
 
     def _download(blobs, extension):
 
-        download_count = 0
+        download_count = 0 
 
         if len(blobs):
             for blob in blobs:
