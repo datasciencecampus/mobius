@@ -42,11 +42,11 @@ On OSX this can require separate installation:
 **TLDR:**
 
 ```shell
-# check if your Country is available
-python ./mobius.py ls
+# check if your Country is available with an option to select a date
+python ./mobius.py ls <DATE>
 
 # Download pdf and svg
-python ./mobius.py download <COUNTRY_CODE>
+python ./mobius.py download <COUNTRY_CODE> <DATE>
 
 # process it
 python ./mobius.py summary <INPUT_PDF> <OUTPUT_FOLDER>
@@ -82,23 +82,24 @@ Commands:
 ```text
 Usage: mobius.py ls [OPTIONS]
 
-  List all the SVGs available in the buckets
+  List the SVGs available in the buckets for the given date. If no date given, a list of all available SVGs is returned
+
+Options:
+  --help  Show this message and exit.
+  <DATE> Lists all the SVGs published on the date
+
+
+Usage: mobius.py pdf [OPTIONS] DATE
+
+  List the PDFs available in the buckets for the given date. If no date given, a list of all available PDFs is returned
 
 Options:
   --help  Show this message and exit.
 
 
-Usage: mobius.py pdf [OPTIONS]
+Usage: mobius.py download [OPTIONS] COUNTRY_CODE DATE
 
-  List all the PDFs available in the buckets
-
-Options:
-  --help  Show this message and exit.
-
-
-Usage: mobius.py download [OPTIONS] COUNTRY_CODE
-
-  Download PDF and SVG for a given country using the country code
+  Download PDF and SVG for a given country using the country code and date. If no DATE argument given all available PDFs and SBGs for the given country will be downloaded
 
 Options:
   --help  Show this message and exit.
