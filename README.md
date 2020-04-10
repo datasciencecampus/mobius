@@ -42,7 +42,7 @@ On OSX this can require separate installation:
 **TLDR:**
 
 ```shell
-# Check that report dates are available
+# Check what report dates are available
 python ./mobius.py dt
 
 # Check if a country is available, with an option to select a date (not specifying a date will show all results)
