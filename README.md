@@ -42,13 +42,16 @@ On OSX this can require separate installation:
 **TLDR:**
 
 ```shell
-# check if your Country is available with an option to select a date
+# Check that report dates are available
+python ./mobius.py dt
+
+# Check if a country is available, with an option to select a date (not specifying a date will show all results)
 python ./mobius.py ls <DATE>
 
-# Download pdf and svg
+# Download PDF and SVG
 python ./mobius.py download <COUNTRY_CODE> <DATE>
 
-# process it
+# Process the PDF and SVG
 python ./mobius.py summary <INPUT_PDF> <OUTPUT_FOLDER>
 python ./mobius.py full <INPUT_PDF> <INPUT_SVG> <OUTPUT_FOLDER>
 
@@ -64,56 +67,69 @@ Usage: mobius.py [OPTIONS] COMMAND [ARGS]...
 Options:
   --help  Show this message and exit.
 
-Commands:
-  download  Download SVG and PDF for a given country using the country code
-  full      Produce full CSV of trend data from PDF and SVG input
+Commands (order of usefulness):
+  dt        List all the dates reports are available for
   ls        List all the PDFs available in the buckets
   pdf       List all the PDFs available in the buckets
   svg       List all the SVGs available in the buckets
-  proc      Process a given country's SVG
+  download  Download SVG and PDF for a given country using the country code
+  full      Produce full CSV of trend data from PDF and SVG input
   summary   Produce summary CSV of regional headline figures from CSV
+  proc      Process a given country's SVG
+
 ```
 
-1. **Check for, and download, SVG and PDF files using `mobius.py ls|svg` and `mobius.py download` commands**:
+1. **Check what dates reports are available for using  `mobius.py dt` command**:
+
+    ```text
+    Usage: mobius.py dt
+    
+      List the dates reports are available for
+    
+    Options:
+      --help  Show this message and exit.
+    ```
+
+2. **Check for, and download, SVG and PDF files using `mobius.py ls|svg` and `mobius.py download` commands**:
 
    Use the `mobius.py` command line tool to list all the available countries
    for PDF/SVG and then download them with the two helpful commands below.
 
-```text
-Usage: mobius.py ls [OPTIONS]
+    ```text
+    Usage: mobius.py ls [OPTIONS]
+    
+      List the SVGs available in the buckets for the given date. If no date given, a list of all available SVGs is returned
+    
+    Options:
+      --help  Show this message and exit.
+      <DATE> Lists all the SVGs published on the date
+    
+    
+    Usage: mobius.py pdf [OPTIONS] DATE
+    
+      List the PDFs available in the buckets for the given date. If no date given, a list of all available PDFs is returned
+    
+    Options:
+      --help  Show this message and exit.
+    
+    
+    Usage: mobius.py download [OPTIONS] COUNTRY_CODE DATE
+    
+      Download PDF and SVG for a given country using the country code and date. If no DATE argument given all available PDFs and SBGs for the given country will be downloaded
+    
+    Options:
+      --help  Show this message and exit.
+    ```
 
-  List the SVGs available in the buckets for the given date. If no date given, a list of all available SVGs is returned
-
-Options:
-  --help  Show this message and exit.
-  <DATE> Lists all the SVGs published on the date
-
-
-Usage: mobius.py pdf [OPTIONS] DATE
-
-  List the PDFs available in the buckets for the given date. If no date given, a list of all available PDFs is returned
-
-Options:
-  --help  Show this message and exit.
-
-
-Usage: mobius.py download [OPTIONS] COUNTRY_CODE DATE
-
-  Download PDF and SVG for a given country using the country code and date. If no DATE argument given all available PDFs and SBGs for the given country will be downloaded
-
-Options:
-  --help  Show this message and exit.
-```
-
-2. **Run the `mobius.py summary` command**
-```text
-Usage: mobius.py summary [OPTIONS] INPUT_PDF OUTPUT_FOLDER
-
-  Produce summary CSV of regional headline figures from CSV
-
-Options:
-  --help  Show this message and exit.
-```
+3. **Run the `mobius.py summary` command**
+    ```text
+    Usage: mobius.py summary [OPTIONS] INPUT_PDF OUTPUT_FOLDER
+    
+      Produce summary CSV of regional headline figures from CSV
+    
+    Options:
+      --help  Show this message and exit.
+    ```
 
 Specify the input pdf file for the individual country as the `INPUT_PDF`,
 and the output folder where you want the CSV to (e.g.
@@ -122,16 +138,16 @@ and the output folder where you want the CSV to (e.g.
 Creates a summary CSV joined to the data extracted from the SVG plots
 `<OUTPUT_FOLDER>/<INPUT_PDF_BASENAME>_summary.csv`.
 
-3. **Run the `mobius.py full` command**
-```text
-Usage: mobius.py full [OPTIONS] INPUT_PDF INPUT_SVG OUTPUT_FOLDER
-
-  Produce full CSV of trend data from PDF/SVG input
-
-Options:
-  -d, --dates_file TEXT  Override date lookup file
-  --help                 Show this message and exit.
-```
+4. **Run the `mobius.py full` command**
+    ```text
+    Usage: mobius.py full [OPTIONS] INPUT_PDF INPUT_SVG OUTPUT_FOLDER
+    
+      Produce full CSV of trend data from PDF/SVG input
+    
+    Options:
+      -d, --dates_file TEXT  Override date lookup file
+      --help                 Show this message and exit.
+    ```
 
 Specify the input pdf/svg file for the individual country as the `INPUT_PDF`/`INPUT_SVG`,
 and the output folder where you want the CSV to be saved to (e.g.
@@ -146,20 +162,20 @@ Creates a full CSV joined to the data extracted from the SVG plots
 Command gives a short summary of any discrepancies between the summary figures
 and the data extracted from svg plots.
 
-4. **(Alternative) Run the `mobius.py proc` command**
+5. **(Alternative) Run the `mobius.py proc` command**
 
-```text
-Usage: mobius.py proc [OPTIONS] INPUT_LOCATION OUTPUT_FOLDER [DATES_FILE]
-
-  Process a given country SVG
-
-Options:
-  -f, --folder TEXT  If provided will overwrite the output folder name
-  -s, --svgs         Enables saving of SVGs that get extracted
-  -c, --csvs         Enables saving of CSVs that get extracted
-  -p, --plots        Enables creation and saving of additional PNG plots
-  --help             Show this message and exit.
-```
+    ```text
+    Usage: mobius.py proc [OPTIONS] INPUT_LOCATION OUTPUT_FOLDER [DATES_FILE]
+    
+      Process a given country SVG
+    
+    Options:
+      -f, --folder TEXT  If provided will overwrite the output folder name
+      -s, --svgs         Enables saving of SVGs that get extracted
+      -c, --csvs         Enables saving of CSVs that get extracted
+      -p, --plots        Enables creation and saving of additional PNG plots
+      --help             Show this message and exit.
+    ```
 Specify the input file for the individual country as the `INPUT_LOCATION` and the
 output folder where you want the CSV and other files to be saved to (e.g.
 `./output`).

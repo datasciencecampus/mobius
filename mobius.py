@@ -26,6 +26,16 @@ def get_country(blob):
     return country
 
 
+def show_dates():
+    dates = []
+    blobs = list(get(filetype='PDF'))
+    for i, blob in enumerate(blobs):
+        date = blob.name.split("/")[-1].split('_')[0]
+        if blob.name.split("/")[-1].split('_')[0] not in dates:
+            dates.append(blob.name.split("/")[-1].split('_')[0])
+            print(f" Reports for {date} available.")
+
+
 def show(filetype, date):
     url_prefix = "https://storage.cloud.google.com/mobility-reports/"
     country_names = pd.read_csv(os.path.join(os.getcwd(),'config/country_codes.csv'))
@@ -89,6 +99,11 @@ def show(filetype, date):
 @click.group(help="Downloader and processor for Google mobility reports")
 def cli():
     pass
+
+
+@cli.command(help="List all the dates reports are available for")
+def dt():
+    show_dates()
 
 
 @cli.command(help="List all the PDFs available in the buckets")
