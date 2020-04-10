@@ -81,7 +81,8 @@ def pdf():
 
 @cli.command(help="Download pdf and svg for a given country using the country code")
 @click.argument("COUNTRY_CODE")
-def download(country_code):
+@click.argument("DATE")
+def download(country_code, date):
     client = Client.create_anonymous_client()
 
     def _download(blobs, extension):
@@ -100,7 +101,7 @@ def download(country_code):
         else:
             print(f"Could not find a {extension} file for code {country_code}")
 
-    regex = f"\d{{4}}-\d{{2}}-\d{{2}}_{country_code}_M.+"
+    regex = f"{date}_{country_code}_M.+"
 
     blobs = get(filetype="SVG", regex=regex)
     _download(blobs, "svg")
