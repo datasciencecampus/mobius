@@ -10,7 +10,7 @@ from google.cloud.storage.client import Client
 import mobius
 
 BUCKET = "mobility-reports"
-
+DATE = "2020-04-05"
 
 def get(filetype="SVG", regex="\d{4}-\d{2}-\d{2}_.+"):
     client = Client.create_anonymous_client()
@@ -35,27 +35,28 @@ def show(filetype):
     blobs = list(get(filetype=filetype))
     print("Available countries:")
     for i, blob in enumerate(blobs):
-        country = get_country(blob)
-        country_name = country_names.loc[country_names['code'] == f"-{country[0:2]}", 'name'].item()
-        country = (
-            country + (" " * (MAXLEN - len(country)))
-            if len(country) < MAXLEN
-            else country[:MAXLEN]
-        )
-        country_name = (
-            country_name + (" " * (MAXLEN_COUNTRY - len(country_name)))
-            if len(country_name) < MAXLEN_COUNTRY
-            else country_name[:MAXLEN_COUNTRY]
-        )
+        if blob.name.split("/")[-1].split('_')[0] == DATE:
+            country = get_country(blob)
+            country_name = country_names.loc[country_names['code'] == f"-{country[0:2]}", 'name'].item()
+            country = (
+                country + (" " * (MAXLEN - len(country)))
+                if len(country) < MAXLEN
+                else country[:MAXLEN]
+            )
+            country_name = (
+                country_name + (" " * (MAXLEN_COUNTRY - len(country_name)))
+                if len(country_name) < MAXLEN_COUNTRY
+                else country_name[:MAXLEN_COUNTRY]
+            )
 
 
-        iteration = str(i + 1)
-        iteration = (
-            iteration
-            if (len(iteration) == 3)
-            else (" " * (3 - len(iteration)) + iteration)
-        )
-        print(f" {iteration}. {country} {country_name} ({url_prefix + blob.name})")
+            iteration = str(i + 1)
+            iteration = (
+                iteration
+                if (len(iteration) == 3)
+                else (" " * (3 - len(iteration)) + iteration)
+            )
+            print(f" {iteration}. {country} {country_name} ({url_prefix + blob.name})")
 
 
 
@@ -66,7 +67,7 @@ def cli():
 
 @cli.command(help="List all the PDFs available in the buckets")
 def ls():
-    show("SVG")
+    show("PDF")
 
 
 @cli.command(help="List all the SVGs available in the buckets")
@@ -86,18 +87,22 @@ def download(country_code):
 
     def _download(blobs, extension):
 
+        download_count = 0
+
         if len(blobs):
             for blob in blobs:
+                if blob.name.split("/")[-1].split('_')[0] == DATE:
+                    fname = f"{extension}s/{get_country(blob)}.{extension}"
+                    with open(fname, "wb+") as fileobj:
 
-                fname = f"{extension}s/{get_country(blob)}.{extension}"
-                with open(fname, "wb+") as fileobj:
+                        client.download_blob_to_file(blob, fileobj)
 
-                    client.download_blob_to_file(blob, fileobj)
+                    print(
+                        f"Download {country_code} {extension} complete. Saved to /{extension}s"
+                    )
+                    download_count += 1
 
-            print(
-                f"Download {country_code} {extension} complete. Saved to /{extension}s"
-            )
-        else:
+        if download_count == 0:
             print(f"Could not find a {extension} file for code {country_code}")
 
     regex = f"\d{{4}}-\d{{2}}-\d{{2}}_{country_code}_M.+"

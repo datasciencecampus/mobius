@@ -7,6 +7,10 @@
 For extracting **every** graph from **any** [Google's COVID-19 Community Mobility Report](https://www.google.com/covid19/mobility/) (182) into
 comma separated value (CSV) files. This code is developed at _speed_ on the COVID-19 Community Mobility Report PDF documents published on Friday 3rd of April 2020.
 
+## Updates
+
+**10/04/2020**: PDF and SVGs updated for the Friday 10th of April 2020 release of data.
+
 ## Installation
 
 We provide the python `requirements.txt` file as well as a `poetry` setup for
@@ -133,7 +137,7 @@ and the output folder where you want the CSV to be saved to (e.g.
 `./output`).
 
 Optionally pass in a custom the dates lookup file (e.g.
-`./config/dates_lookup.csv`) - used to convert coordinates to dates.
+`./config/dates_lookup_<date>.csv`) - used to convert coordinates to dates. `<date>` is either `2020_03_29` or `2020_04_05`.
 
 Creates a full CSV joined to the data extracted from the SVG plots
 `<OUTPUT_FOLDER>/<INPUT_PDF_BASENAME>.csv`.
