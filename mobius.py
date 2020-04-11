@@ -33,7 +33,7 @@ def show_dates():
         date = blob.name.split("/")[-1].split('_')[0]
         if blob.name.split("/")[-1].split('_')[0] not in dates:
             dates.append(blob.name.split("/")[-1].split('_')[0])
-            print(f" Reports for {date} available.")
+            print(f"{date}")
 
 
 def show(filetype, date):
@@ -143,7 +143,7 @@ def download(country_code, date):
                         client.download_blob_to_file(blob, fileobj)
 
                     print(
-                        f"Download {country_code} {extension} complete. Saved to /{extension}s"
+                        f"Download {country_code} {date} {extension} complete. Saved to /{extension}s"
                     )
                     download_count += 1
 

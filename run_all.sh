@@ -19,35 +19,43 @@ fi
 
 set -e  # Exit on any error
 
+
+# List all dates
+DATES=$(./mobius.py dt)
+
 # List all the countries
 COUNTRIES=$(./mobius.py ls | sed -En "s/.*[0-9 \.]+([A-Z]{2}(\-[A-Z][A-Za-z_]+)?).*/\1/p")
 
+DATES=($DATES)
 COUNTRIES=($COUNTRIES)
 
 for COUNTRY in "${COUNTRIES[@]}"
-do  
-    echo Running for "${COUNTRY}"
+do
+    for DATE in "${DATES[@]}"
+    do
+        echo Running for "${COUNTRY}" "${DATE}"
 
-    # Download pdf and svg
-    ./mobius.py download "${COUNTRY}"
+        # Download pdf and svg
+        ./mobius.py download "${COUNTRY}" "${DATE}"
 
-    case $MODE in
-      ALL)
-        echo "Running summary and full"
-        ./mobius.py summary pdfs/"${COUNTRY}".pdf output
-        ./mobius.py full pdfs/"${COUNTRY}".pdf svgs/"${COUNTRY}".svg output
-        ;;
+        case $MODE in
+          ALL)
+            echo "Running summary and full"
+            ./mobius.py summary pdfs/"${COUNTRY}_${DATE}".pdf output
+            ./mobius.py full pdfs/"${COUNTRY}_${DATE}".pdf svgs/"${COUNTRY}_${DATE}".svg output
+            ;;
 
-      SUMMARY)
-        echo "Running summary only"
-        ./mobius.py summary pdfs/"${COUNTRY}".pdf output
-        ;;
+          SUMMARY)
+            echo "Running summary only"
+            ./mobius.py summary pdfs/"${COUNTRY}_${DATE}".pdf output
+            ;;
 
-      FULL)
-        echo "Running full only"
-        ./mobius.py full pdfs/"${COUNTRY}".pdf svgs/"${COUNTRY}".svg output
-        ;;
-    esac
+          FULL)
+            echo "Running full only"
+            ./mobius.py full pdfs/"${COUNTRY}_${DATE}".pdf svgs/"${COUNTRY}_${DATE}".svg output
+            ;;
+        esac
+    done
 done
 
 echo "Script finished."
