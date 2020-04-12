@@ -22,6 +22,7 @@ import numpy as np
 import pandas as pd
 import rtree
 from tqdm import tqdm
+from datetime import datetime
 
 Anchor = collections.namedtuple("Anchor", ["left", "bottom"])
 
@@ -32,7 +33,6 @@ PlotElements = collections.namedtuple(
 
 class PageData:
     __COUNTRY_NAME_FIXED_BOX = (20, 740, 580, 780)
-    __HEADING_DATE_STRING = "March 29, 2020"
 
     # Note these are set to cover multiple cases
     # In particular see Liechtenstein (LI) where "Not enough data for this date"
@@ -47,7 +47,8 @@ class PageData:
 
     __COUNTRY_PAGES = {1, 2}
 
-    def __init__(self, page_num, text_elements):
+    def __init__(self, page_num, text_elements, heading_date_string):
+        self.heading_date_string = heading_date_string
         self.page_num = page_num
         self.bbox_to_text, self.text_to_corner = PageData.index(text_elements)
 
@@ -67,7 +68,7 @@ class PageData:
             raise ValueError("country_name only present on first page")
 
         text = self.text_in_box(PageData.__COUNTRY_NAME_FIXED_BOX)
-        return text.replace(PageData.__HEADING_DATE_STRING, "").strip()
+        return text.replace(self.heading_date_string, "").strip()
 
     def headline_figure(self, anchor):
 
@@ -252,13 +253,13 @@ def text_gen(layout):
             yield element.bbox, element.get_text()
 
 
-def _extract(f):
+def _extract(f, heading_date_string):
 
     country = None
 
     for page_num, text_elements in enumerate(page_gen(f), start=1):
 
-        page_data = PageData(page_num, text_elements)
+        page_data = PageData(page_num, text_elements, heading_date_string)
 
         if page_num == 1:
             country = page_data.country_name()
@@ -318,11 +319,15 @@ def validate(df):
         )
 
 
-def summarise(f):
+def summarise(f, dates_file):
+
+    date_string = dates_file.split('.')[0][-10:]
+    date_object = datetime.strptime(date_string, '%Y_%m_%d')
+    heading_date_string = date_object.strftime("%B %d, %Y").replace(' 0', ' ')
 
     results = []
     for idx, data in tqdm(
-        enumerate(_extract(f), start=1), desc="Extracting plot summaries"
+        enumerate(_extract(f, heading_date_string), start=1), desc="Extracting plot summaries"
     ):
 
         country, region, page_num, plot_elements = data

@@ -224,7 +224,7 @@ def summary(input_pdf, output_folder):
 def full(input_pdf, input_svg, output_folder, dates_file=None):
 
     with mobius.io.open_document(input_pdf) as doc:
-        summary_df = mobius.extraction.summarise(doc)
+        summary_df = mobius.extraction.summarise(doc, dates_file)
 
     data = mobius.graphs.graph_process(input_svg, None, False)
 
