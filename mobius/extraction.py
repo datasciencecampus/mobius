@@ -321,7 +321,7 @@ def validate(df):
 
 def summarise(f, dates_file):
 
-    date_string = dates_file.split('.')[0][-10:]
+    date_string = dates_file.split('.csv')[0][-10:]
     date_object = datetime.strptime(date_string, '%Y_%m_%d')
     heading_date_string = date_object.strftime("%B %d, %Y").replace(' 0', ' ')
 
