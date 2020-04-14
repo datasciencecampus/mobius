@@ -91,7 +91,7 @@ Commands:
       --help  Show this message and exit.
     ```
 
-2. **Check for, and download, SVG and PDF files using `mobius.py ls|svg` and `mobius.py download` commands**:
+2. **Check for, and download, SVG and PDF files using `mobius.py svg` and `mobius.py download` commands**:
 
    Use the `mobius.py` command line tool to list all the available countries
    for PDF/SVG and then download them with the two helpful commands below.
