@@ -106,12 +106,6 @@ def dt():
     show_dates()
 
 
-@cli.command(help="List all the PDFs available in the buckets")
-@click.argument("DATE", required = False)
-def ls(date):
-    show("PDF", date)
-
-
 @cli.command(help="List all the SVGs available in the buckets")
 @click.argument("DATE", required = False)
 def svg(date):
@@ -181,7 +175,7 @@ def download(country_code, date):
 @cli.command(help="Process a given country SVG")
 @click.argument("INPUT_LOCATION")
 @click.argument("OUTPUT_FOLDER")
-@click.argument("DATES_FILE", default=None)
+@click.argument("DATES_FILE")
 @click.option(
     "-f", "--folder", help="If provided will overwrite the output folder name",
 )
@@ -208,10 +202,11 @@ def proc(input_location, output_folder, folder, dates_file, svgs, plots):
 @cli.command(help="Produce summary CSV of regional headline figures from CSV")
 @click.argument("INPUT_PDF", type=click.Path(exists=True))
 @click.argument("OUTPUT_FOLDER")
-def summary(input_pdf, output_folder):
+@click.argument("DATES_FILE")
+def summary(input_pdf, output_folder, dates_file):
 
     with mobius.io.open_document(input_pdf) as doc:
-        summary_df = mobius.extraction.summarise(doc)
+        summary_df = mobius.extraction.summarise(doc, dates_file)
 
     mobius.io.write_summary(summary_df, input_pdf, output_folder)
 
@@ -220,8 +215,8 @@ def summary(input_pdf, output_folder):
 @click.argument("INPUT_PDF", type=click.Path(exists=True))
 @click.argument("INPUT_SVG", type=click.Path(exists=True))
 @click.argument("OUTPUT_FOLDER")
-@click.option("-d", "--dates_file", help="Override date lookup file", default=None)
-def full(input_pdf, input_svg, output_folder, dates_file=None):
+@click.argument("DATES_FILE")
+def full(input_pdf, input_svg, output_folder, dates_file):
 
     with mobius.io.open_document(input_pdf) as doc:
         summary_df = mobius.extraction.summarise(doc, dates_file)
