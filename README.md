@@ -1,4 +1,4 @@
-# Mobility Report graph extractor (mobius)
+# mobius - Mobility Report graph extractor
 
 <p align="center">
     <img src="/meta/logo.png" alt="Logo"  height="200px">
@@ -52,10 +52,12 @@ python ./mobius.py ls <DATE>
 python ./mobius.py download <COUNTRY_CODE> <DATE>
 
 # Process the PDF and SVG
-python ./mobius.py summary <INPUT_PDF> <OUTPUT_FOLDER>
-python ./mobius.py full <INPUT_PDF> <INPUT_SVG> <OUTPUT_FOLDER>
+python ./mobius.py summary <INPUT_PDF> <OUTPUT_FOLDER> <DATES_FILE>
+python ./mobius.py full <INPUT_PDF> <INPUT_SVG> <OUTPUT_FOLDER> <DATES_FILE>
 
 ```
+
+**Note:** `DATE_FILE` refers to the look up file in the config directory named `dates_lookup_xxxx_xx_xx.csv` where the `x` mark the release date of the reports you are extracting the data from. 
 
 ### Full command list
 
@@ -67,16 +69,15 @@ Usage: mobius.py [OPTIONS] COMMAND [ARGS]...
 Options:
   --help  Show this message and exit.
 
-Commands (order of usefulness):
+Commands:
+  download  Download pdf and svg for a given country using the country code
   dt        List all the dates reports are available for
-  ls        List all the PDFs available in the buckets
+  full      Produce full CSV of trend data from PDF/SVG input
   pdf       List all the PDFs available in the buckets
-  svg       List all the SVGs available in the buckets
-  download  Download SVG and PDF for a given country using the country code
-  full      Produce full CSV of trend data from PDF and SVG input
+  proc      Process a given country SVG
   summary   Produce summary CSV of regional headline figures from CSV
-  proc      Process a given country's SVG
-
+  svg       List all the SVGs available in the buckets
+  
 ```
 
 1. **Check what dates reports are available for using  `mobius.py dt` command**:
@@ -96,7 +97,7 @@ Commands (order of usefulness):
    for PDF/SVG and then download them with the two helpful commands below.
 
     ```text
-    Usage: mobius.py ls [OPTIONS]
+    Usage: mobius.py svg [OPTIONS][DATE]
     
       List the SVGs available in the buckets for the given date. If no date given, a list of all available SVGs is returned
     
@@ -105,7 +106,7 @@ Commands (order of usefulness):
       <DATE> Lists all the SVGs published on the date
     
     
-    Usage: mobius.py pdf [OPTIONS] DATE
+    Usage: mobius.py pdf [OPTIONS] [DATE]
     
       List the PDFs available in the buckets for the given date. If no date given, a list of all available PDFs is returned
     
@@ -113,7 +114,7 @@ Commands (order of usefulness):
       --help  Show this message and exit.
     
     
-    Usage: mobius.py download [OPTIONS] COUNTRY_CODE DATE
+    Usage: mobius.py download [OPTIONS] COUNTRY_CODE [DATE]
     
       Download PDF and SVG for a given country using the country code and date. If no DATE argument given all available PDFs and SBGs for the given country will be downloaded
     
@@ -123,7 +124,7 @@ Commands (order of usefulness):
 
 3. **Run the `mobius.py summary` command**
     ```text
-    Usage: mobius.py summary [OPTIONS] INPUT_PDF OUTPUT_FOLDER
+    Usage: mobius.py summary [OPTIONS] INPUT_PDF OUTPUT_FOLDER DATES_FILE
     
       Produce summary CSV of regional headline figures from CSV
     
@@ -140,21 +141,22 @@ Creates a summary CSV joined to the data extracted from the SVG plots
 
 4. **Run the `mobius.py full` command**
     ```text
-    Usage: mobius.py full [OPTIONS] INPUT_PDF INPUT_SVG OUTPUT_FOLDER
+    Usage: mobius.py full [OPTIONS] INPUT_PDF INPUT_SVG OUTPUT_FOLDER DATES_FILE
     
       Produce full CSV of trend data from PDF/SVG input
     
     Options:
-      -d, --dates_file TEXT  Override date lookup file
       --help                 Show this message and exit.
+      
     ```
 
 Specify the input pdf/svg file for the individual country as the `INPUT_PDF`/`INPUT_SVG`,
 and the output folder where you want the CSV to be saved to (e.g.
 `./output`).
 
-Optionally pass in a custom the dates lookup file (e.g.
-`./config/dates_lookup_<date>.csv`) - used to convert coordinates to dates. `<date>` is either `2020_03_29` or `2020_04_05`.
+Pass in a custom the dates lookup file (e.g. `./config/dates_lookup_<date>.csv`) - used to
+convert coordinates to dates. `<date>` is in the `YYYY_MM_DD` format and all available dates for 
+download are available using `mobius dt` command.
 
 Creates a full CSV joined to the data extracted from the SVG plots
 `<OUTPUT_FOLDER>/<INPUT_PDF_BASENAME>.csv`.
