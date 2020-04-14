@@ -215,9 +215,10 @@ CSV datasets for G20 countries (except Russia and China) can be found at the [Da
 ## Utility script
 
 To run through all available countries see `run_all.sh`.
+See `run_all.sh help` for usage.
 
 ```shell
-# Create summary and full CSVs for all countries returned by ./mobius.py ls
+# Create summary and full CSVs for all countries returned by ./mobius.py svg
 ./run_all.sh
 ```
 
