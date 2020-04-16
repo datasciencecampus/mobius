@@ -10,6 +10,7 @@ comma separated value (CSV) files. This code is developed at _speed_ on the COVI
 ## Updates
 
 **10/04/2020**: PDF and SVGs updated for the Friday 10th of April 2020 release of data.
+**16/04/2020**: PDF and SVGs updated for the Wednesday 15th of April 2020 release of data.
 
 ## Installation
 
