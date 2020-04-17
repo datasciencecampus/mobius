@@ -1,11 +1,27 @@
 # -*- coding: utf-8 -*-
+import os
+
 from svgpathtools import svg2paths
 import mobius
 
 
+def _resource_dir():
+
+    resources_dir = "resources"
+    if os.path.isdir(resources_dir):
+        return resources_dir
+
+    else:
+        return "tests/resources"
+
+
+def _filepath(name):
+    return os.path.join(_resource_dir(), name)
+
+
 def test_categorise_paths():
     # Given
-    filepath = "resources/nogaps.svg"
+    filepath = _filepath("nogaps.svg")
 
     # When
     paths = svg2paths(filepath)
@@ -18,7 +34,7 @@ def test_categorise_paths():
 
 def test_convert_units():
     # Given
-    filepath = "resources/nogaps.svg"
+    filepath = _filepath("nogaps.svg")
 
     # When
     paths = svg2paths(filepath)
@@ -32,7 +48,7 @@ def test_convert_units():
 
 def test_convert_units_w_gaps():
     # Given
-    filepath = "resources/gaps.svg"
+    filepath = _filepath("gaps.svg")
 
     # When
     paths = svg2paths(filepath)
@@ -46,7 +62,7 @@ def test_convert_units_w_gaps():
 
 def test_path_with_point_at_end():
     # Given
-    filepath = "resources/endpoint.svg"
+    filepath = _filepath("endpoint.svg")
 
     # When
     paths = svg2paths(filepath)
@@ -59,7 +75,7 @@ def test_path_with_point_at_end():
 
 def test_path_with_points_in_middle():
     # Given
-    filepath = "resources/midpoints.svg"
+    filepath = _filepath("midpoints.svg")
 
     # When
     paths = svg2paths(filepath)
@@ -72,7 +88,7 @@ def test_path_with_points_in_middle():
 
 def test_path_only_individual_points():
     # Given
-    filepath = "resources/no_segment_trendline.svg"
+    filepath = _filepath("no_segment_trendline.svg")
 
     # When
     paths = svg2paths(filepath)
@@ -85,7 +101,7 @@ def test_path_only_individual_points():
 
 def test_path_single_line_segment():
     # Given
-    filepath = "resources/single_segment_trendline.svg"
+    filepath = _filepath("single_segment_trendline.svg")
 
     # When
     paths = svg2paths(filepath)
