@@ -1,5 +1,8 @@
 # mobius - Mobility Report graph extractor
 
+**PLEASE READ: As of 16/04/2020 Google have released the data in [CSV format](https://www.gstatic.com/covid19/mobility/Global_Mobility_Report.csv). This tool will not be maintained going forward.**
+
+
 <p align="center">
     <img src="/meta/logo.png" alt="Logo"  height="200px">
 </p>
