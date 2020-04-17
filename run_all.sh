@@ -52,11 +52,6 @@ esac
 
 set -e  # Exit on any error
 
-# Get dates lookup
-CLEAN=$(echo $DATE | sed -E 's/\-/_/g')
-DATES_FILE="config/dates_lookup_${CLEAN}.csv"
-echo "Using $DATES_FILE as lookup"
-
 # List all the countries/states
 case $STATES in 
     true)
@@ -71,36 +66,36 @@ esac
 COUNTRIES=($COUNTRIES)
 
 full () {
-    ./mobius.py full pdfs/"${1}_${DATE}".pdf svgs/"${1}_${DATE}".svg output $DATES_FILE
+    ./mobius.py full pdfs/"${1}_${DATE}".pdf svgs/"${1}_${DATE}".svg output
 }
 
 summary () {
-    ./mobius.py summary pdfs/"${1}_${DATE}".pdf output $DATES_FILE
+    ./mobius.py summary pdfs/"${1}_${DATE}".pdf output
 }
 
 
 for COUNTRY in "${COUNTRIES[@]}"
 do
-        echo Running for $COUNTRY $DATE
+        echo Running for "$COUNTRY" "$DATE"
 
         # Download pdf and svg
-        ./mobius.py download $COUNTRY $DATE
+        ./mobius.py download "$COUNTRY" "$DATE"
 
         case $MODE in
           ALL)
             echo "Running summary and full"
-            full $COUNTRY 
-            summary $COUNTRY 
+            full "$COUNTRY"
+            summary "$COUNTRY"
             ;;
 
           SUMMARY)
             echo "Running summary only"
-            summary $COUNTRY
+            summary "$COUNTRY"
             ;;
 
           FULL)
             echo "Running full only"
-            full $COUNTRY 
+            full "$COUNTRY"
             ;;
         esac
 done
