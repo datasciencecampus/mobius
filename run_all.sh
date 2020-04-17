@@ -53,18 +53,18 @@ esac
 set -e  # Exit on any error
 
 # Get dates lookup
-CLEAN=$(echo $DATE | sed -r 's/\-/_/g')
+CLEAN=$(echo $DATE | sed -E 's/\-/_/g')
 DATES_FILE="config/dates_lookup_${CLEAN}.csv"
 echo "Using $DATES_FILE as lookup"
 
 # List all the countries/states
 case $STATES in 
     true)
-    COUNTRIES=$(./mobius.py svg | sed -En "s/.*[0-9 \.]+([US-]{2}(\-[A-Z][A-Za-z_]+)).*/\1/p")
+    COUNTRIES=$(./mobius.py svg | sed -En "s/.*[0-9 \.]+([US-]{2}(\-[A-Z][A-Za-z_]+)).*$DATE.*/\1/p")
 
     ;;
     *)
-    COUNTRIES=$(./mobius.py svg | sed -En "s/.*[0-9 \.]+([A-Z]{2}(\-[A-Z][A-Za-z_]+)?).*/\1/p")
+    COUNTRIES=$(./mobius.py svg | sed -En "s/.*[0-9 \.]+([A-Z]{2}(\-[A-Z][A-Za-z_]+)?).*$DATE.*/\1/p")
     ;;
 esac
 
