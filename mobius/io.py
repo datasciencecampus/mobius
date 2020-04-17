@@ -22,7 +22,18 @@ def write_summary(df, input_pdf, output_folder):
     out_filename = input_no_ext + "_summary.csv"
 
     outpath = os.path.join(output_folder, out_filename)
-    df.to_csv(outpath, index=False, float_format="%.3f",)
+
+    relevant_columns = [
+        "country",
+        "page_num",
+        "plot_num",
+        "region",
+        "plot_name",
+        "asterisk",
+        "headline"
+    ]
+
+    df[relevant_columns].to_csv(outpath, index=False, float_format="%.3f",)
     print(f"Saved summary results to {outpath}")
 
 

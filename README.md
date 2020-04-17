@@ -128,7 +128,7 @@ Commands:
 
 3. **Run the `mobius.py summary` command**
     ```text
-    Usage: mobius.py summary [OPTIONS] INPUT_PDF OUTPUT_FOLDER DATES_FILE
+    Usage: mobius.py summary [OPTIONS] INPUT_PDF OUTPUT_FOLDER
     
       Produce summary CSV of regional headline figures from CSV
     
@@ -145,7 +145,7 @@ Creates a summary CSV joined to the data extracted from the SVG plots
 
 4. **Run the `mobius.py full` command**
     ```text
-    Usage: mobius.py full [OPTIONS] INPUT_PDF INPUT_SVG OUTPUT_FOLDER DATES_FILE
+    Usage: mobius.py full [OPTIONS] INPUT_PDF INPUT_SVG OUTPUT_FOLDER
     
       Produce full CSV of trend data from PDF/SVG input
     
@@ -157,10 +157,6 @@ Creates a summary CSV joined to the data extracted from the SVG plots
 Specify the input pdf/svg file for the individual country as the `INPUT_PDF`/`INPUT_SVG`,
 and the output folder where you want the CSV to be saved to (e.g.
 `./output`).
-
-Pass in a custom the dates lookup file (e.g. `./config/dates_lookup_<date>.csv`) - used to
-convert coordinates to dates. `<date>` is in the `YYYY_MM_DD` format and all available dates for 
-download are available using `mobius dt` command.
 
 Creates a full CSV joined to the data extracted from the SVG plots
 `<OUTPUT_FOLDER>/<INPUT_PDF_BASENAME>.csv`.

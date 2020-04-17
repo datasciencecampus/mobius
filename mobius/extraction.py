@@ -17,17 +17,19 @@ Usage:
     the headline figures.
 """
 import collections
+import re
 
 import numpy as np
 import pandas as pd
 import rtree
 from tqdm import tqdm
-from datetime import datetime
+import datetime
+import dateutil.parser
 
 Anchor = collections.namedtuple("Anchor", ["left", "bottom"])
 
 PlotElements = collections.namedtuple(
-    "PlotElements", ["anchor", "plot_name", "headline_figure"]
+    "PlotElements", ["anchor", "plot_name", "headline_figure", "xlabels"]
 )
 
 
@@ -45,10 +47,12 @@ class PageData:
 
     __REGION_OFFSETS = (-20, 100, 500, 140)
 
+    __REGION_XLABEL_OFFSETS = (10, -35, 165, -30)
+    __COUNTRY_XLABEL_OFFSETS = (10, -40, 165, -35)
+
     __COUNTRY_PAGES = {1, 2}
 
-    def __init__(self, page_num, text_elements, heading_date_string):
-        self.heading_date_string = heading_date_string
+    def __init__(self, page_num, text_elements):
         self.page_num = page_num
         self.bbox_to_text, self.text_to_corner = PageData.index(text_elements)
 
@@ -68,7 +72,12 @@ class PageData:
             raise ValueError("country_name only present on first page")
 
         text = self.text_in_box(PageData.__COUNTRY_NAME_FIXED_BOX)
-        return text.replace(self.heading_date_string, "").strip()
+
+        DATE_REGEX = re.compile(r"\w+ \d+, \d+")
+        country = DATE_REGEX.sub(repl="", string=text).strip()
+        date_string = DATE_REGEX.search(text).group(0)
+
+        return country, date_string
 
     def headline_figure(self, anchor):
 
@@ -122,6 +131,23 @@ class PageData:
         text = self.text_in_box(bbox)
         return text
 
+    def xlabels(self, anchor):
+
+        if self.page_num in PageData.__COUNTRY_PAGES:
+            offset = PageData.__COUNTRY_XLABEL_OFFSETS
+        else:
+            offset = PageData.__REGION_XLABEL_OFFSETS
+
+        bbox = self.__apply_offset(anchor, offset)
+        boxes = self.intersecting_boxes(bbox)
+
+        # Sort by x coord
+        boxes = sorted(boxes, key=lambda box: box.bbox[0])
+
+        text = tuple(box.object for box in boxes)
+
+        return text
+
     @staticmethod
     def __apply_offset(anchor: Anchor, offset):
         return (
@@ -157,7 +183,9 @@ def _country_level_extractor(page_data: PageData):
 
         plot_name = page_data.plot_name(anchor)
 
-        elements.append(PlotElements(anchor, plot_name, headline_figure))
+        xlabels = page_data.xlabels(anchor)
+
+        elements.append(PlotElements(anchor, plot_name, headline_figure, xlabels))
 
     return [("__ALL", sort_elements(elements))]
 
@@ -193,7 +221,9 @@ def _region_level_extractor(page_data: PageData):
 
         plot_name = page_data.plot_name(anchor)
 
-        elements[region_key].append(PlotElements(anchor, plot_name, headline_figure))
+        xlabels = page_data.xlabels(anchor)
+
+        elements[region_key].append(PlotElements(anchor, plot_name, headline_figure, xlabels))
 
     result = []
 
@@ -253,16 +283,17 @@ def text_gen(layout):
             yield element.bbox, element.get_text()
 
 
-def _extract(f, heading_date_string):
+def _extract(f):
 
     country = None
+    date_string = None
 
     for page_num, text_elements in enumerate(page_gen(f), start=1):
 
-        page_data = PageData(page_num, text_elements, heading_date_string)
+        page_data = PageData(page_num, text_elements)
 
         if page_num == 1:
-            country = page_data.country_name()
+            country, date_string = page_data.country_name()
 
         extractor = EXTRACTORS.get(page_num, _region_level_extractor)
 
@@ -274,7 +305,47 @@ def _extract(f, heading_date_string):
 
             for plot in plots:
 
-                yield country, region, page_num, plot
+                yield country, date_string, region, page_num, plot
+
+
+def create_date_lookup(summary_df: pd.DataFrame):
+
+    date_string_col = "date_string"
+    xlabel_col = "xlabels"
+
+    assert date_string_col in summary_df.columns
+    assert xlabel_col in summary_df.columns
+
+    unique_df = summary_df[[date_string_col, xlabel_col]].drop_duplicates()
+
+    if len(unique_df) > 1:
+        raise ValueError("Didn't get a unique value for dates and xlabels")
+
+    date_string = unique_df[date_string_col].values[0]
+    xlabels = unique_df[xlabel_col].values[0]
+
+    start_date = dateutil.parser.parse(date_string)
+
+    xmin_string = f"{xlabels[0]} {start_date.year}"
+    xmin_date = dateutil.parser.parse(xmin_string)
+
+    xmax_string= f"{xlabels[-1]} {start_date.year}"
+    xmax_date = dateutil.parser.parse(xmax_string)
+
+    delta = xmax_date - xmin_date
+
+    dates = [str((xmin_date + datetime.timedelta(days=day)).date()) for day in range(delta.days + 1)]
+
+    index = list(range(1, len(dates)+1))
+
+    lookup_df = pd.DataFrame({
+        "index": index,
+        "date": dates
+    })
+
+    lookup_df["index"] = lookup_df["index"]
+
+    return lookup_df
 
 
 def validate(df):
@@ -319,26 +390,24 @@ def validate(df):
         )
 
 
-def summarise(f, dates_file):
-
-    date_string = dates_file.split('.csv')[0][-10:]
-    date_object = datetime.strptime(date_string, '%Y_%m_%d')
-    heading_date_string = date_object.strftime("%B %d, %Y").replace(' 0', ' ')
+def summarise(f):
 
     results = []
     for idx, data in tqdm(
-        enumerate(_extract(f, heading_date_string), start=1), desc="Extracting plot summaries"
+        enumerate(_extract(f), start=1), desc="Extracting plot summaries"
     ):
 
-        country, region, page_num, plot_elements = data
+        country, date_string, region, page_num, plot_elements = data
 
         row_dict = {
+            "date_string": date_string,
             "country": country,
             "region": region,
             "page_num": page_num,
             "plot_num": idx,
             "plot_name": plot_elements.plot_name,
             "headline": plot_elements.headline_figure,
+            "xlabels": plot_elements.xlabels
         }
         results.append(row_dict)
 
@@ -348,6 +417,7 @@ def summarise(f, dates_file):
 
     return df[
         [
+            "date_string",
             "country",
             "page_num",
             "plot_num",
@@ -355,5 +425,6 @@ def summarise(f, dates_file):
             "plot_name",
             "asterisk",
             "headline",
+            "xlabels"
         ]
     ]
